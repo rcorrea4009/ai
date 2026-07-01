@@ -60,52 +60,68 @@ PERIOD_MAP = {
 }
 
 
+# Persists across @st.cache_data TTL expiry so the board never reverts to "—"
+# if a transient fetch returns empty.
+_lkg: dict[str, dict] = {}
+
+
 @st.cache_data(ttl=60)
-def get_quote(ticker: str) -> dict:
-    # NOTE: yfinance's `fast_info` segfaults on Python 3.13 (curl_cffi path),
-    # so we read everything from `.info`, which is stable.
+def _fetch_quote(ticker: str) -> dict:
+    """Inner cached fetch.  Price comes from the v8/finance/chart endpoint
+    (same as yf.download / sparklines) which is never rate-limited on datacenter
+    IPs.  .info metadata is attempted but ignored on failure."""
     try:
-        full_info = yf.Ticker(ticker, session=_yf_session).info or {}
-        prev_close = full_info.get("previousClose") or full_info.get("regularMarketPreviousClose")
-        last_price = (
-            full_info.get("currentPrice")
-            or full_info.get("regularMarketPrice")
-            or full_info.get("regularMarketPreviousClose")
-        )
-        # Fallback: quoteSummary (used by .info) needs a crumb cookie that can
-        # fail on the very first request from a fresh session — the chart endpoint
-        # (v8/finance/chart, same as yf.download) doesn't need one and is already
-        # proven reliable.  Only triggered when .info returns no price.
-        if not last_price:
-            hist = yf.Ticker(ticker, session=_yf_session).history(
-                period="5d", interval="1d", auto_adjust=True
-            )
-            if not hist.empty and "Close" in hist.columns:
-                closes = hist["Close"].dropna()
-                if len(closes) >= 1:
-                    last_price = float(closes.iloc[-1])
-                if not prev_close and len(closes) >= 2:
-                    prev_close = float(closes.iloc[-2])
-        change = (last_price - prev_close) if (last_price and prev_close) else None
+        t = yf.Ticker(ticker, session=_yf_session)
+
+        # PRIMARY: chart endpoint — crumb-free, reliable on all IPs
+        hist = t.history(period="5d", interval="1d", auto_adjust=True)
+        if hist.empty or "Close" not in hist.columns:
+            return {}
+        closes = hist["Close"].dropna()
+        if len(closes) < 1:
+            return {}
+        last_price = float(closes.iloc[-1])
+        prev_close = float(closes.iloc[-2]) if len(closes) >= 2 else None
+        change = (last_price - prev_close) if prev_close is not None else None
         pct = (change / prev_close * 100) if (change is not None and prev_close) else None
+
+        # SECONDARY: .info for display name / metadata — best-effort only
+        name = ticker
+        extra: dict = {}
+        try:
+            info = t.info or {}
+            name = info.get("shortName") or info.get("longName") or ticker
+            extra = {
+                "volume": info.get("volume") or info.get("regularMarketVolume"),
+                "market_cap": info.get("marketCap"),
+                "pe_ratio": info.get("trailingPE"),
+                "beta": info.get("beta"),
+                "sector": info.get("sector"),
+                "industry": info.get("industry"),
+                "fifty_two_week_high": info.get("fiftyTwoWeekHigh"),
+                "fifty_two_week_low": info.get("fiftyTwoWeekLow"),
+            }
+        except Exception:
+            pass
+
         return {
-            "ticker": ticker,
-            "name": full_info.get("shortName") or full_info.get("longName") or ticker,
-            "price": last_price,
-            "prev_close": prev_close,
-            "change": change,
-            "pct_change": pct,
-            "volume": full_info.get("volume") or full_info.get("regularMarketVolume"),
-            "market_cap": full_info.get("marketCap"),
-            "pe_ratio": full_info.get("trailingPE"),
-            "beta": full_info.get("beta"),
-            "sector": full_info.get("sector"),
-            "industry": full_info.get("industry"),
-            "fifty_two_week_high": full_info.get("fiftyTwoWeekHigh"),
-            "fifty_two_week_low": full_info.get("fiftyTwoWeekLow"),
+            "ticker": ticker, "name": name,
+            "price": last_price, "prev_close": prev_close,
+            "change": change, "pct_change": pct,
+            **extra,
         }
     except Exception:
-        return {"ticker": ticker, "name": ticker, "price": None, "pct_change": None}
+        return {}
+
+
+def get_quote(ticker: str) -> dict:
+    """Public API: wraps _fetch_quote with a last-known-good fallback so a
+    transient empty result never wipes out numbers that were showing correctly."""
+    result = _fetch_quote(ticker)
+    if result.get("price") is not None:
+        _lkg[ticker] = result
+        return result
+    return _lkg.get(ticker, {"ticker": ticker, "name": ticker, "price": None, "pct_change": None})
 
 
 @st.cache_data(ttl=300)
@@ -122,12 +138,10 @@ def get_history(ticker: str, period: str = "1y", interval: str = "1d") -> pd.Dat
         return pd.DataFrame()
 
 
-@st.cache_data(ttl=60)
 def get_quotes_bulk(tickers: list) -> dict:
-    results = {}
-    for t in tickers:
-        results[t] = get_quote(t)
-    return results
+    # Not cached here — caching is per-ticker in _fetch_quote, and the LKG
+    # logic in get_quote must run on every call to serve stored good values.
+    return {t: get_quote(t) for t in tickers}
 
 
 @st.cache_data(ttl=300)
