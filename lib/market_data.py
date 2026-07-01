@@ -3,6 +3,19 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 
+
+def _make_cf_session():
+    # curl_cffi impersonates a real Chrome browser, bypassing Yahoo Finance's
+    # datacenter-IP blocks (HTTP 401) that affect Streamlit Cloud deployments.
+    try:
+        from curl_cffi.requests import Session
+        return Session(impersonate="chrome")
+    except Exception:
+        return None
+
+
+_yf_session = _make_cf_session()
+
 INDEX_TICKERS = {
     "S&P 500": "^GSPC",
     "Nasdaq 100": "^NDX",
@@ -52,7 +65,7 @@ def get_quote(ticker: str) -> dict:
     # NOTE: yfinance's `fast_info` segfaults on Python 3.13 (curl_cffi path),
     # so we read everything from `.info`, which is stable.
     try:
-        full_info = yf.Ticker(ticker).info or {}
+        full_info = yf.Ticker(ticker, session=_yf_session).info or {}
         prev_close = full_info.get("previousClose") or full_info.get("regularMarketPreviousClose")
         last_price = (
             full_info.get("currentPrice")
@@ -84,7 +97,7 @@ def get_quote(ticker: str) -> dict:
 @st.cache_data(ttl=300)
 def get_history(ticker: str, period: str = "1y", interval: str = "1d") -> pd.DataFrame:
     try:
-        df = yf.download(ticker, period=period, interval=interval, auto_adjust=True, progress=False)
+        df = yf.download(ticker, period=period, interval=interval, auto_adjust=True, progress=False, session=_yf_session)
         if df.empty:
             return pd.DataFrame()
         if isinstance(df.columns, pd.MultiIndex):
@@ -114,7 +127,7 @@ def get_history_bulk(tickers: list, period: str = "1y", interval: str = "1d") ->
 @st.cache_data(ttl=300)
 def get_stock_fundamentals(ticker: str) -> dict:
     try:
-        t = yf.Ticker(ticker)
+        t = yf.Ticker(ticker, session=_yf_session)
         info = t.info or {}
         return {
             "longName": info.get("longName") or info.get("shortName", ticker),
@@ -184,7 +197,7 @@ def get_stock_fundamentals(ticker: str) -> dict:
 @st.cache_data(ttl=300)
 def get_etf_details(ticker: str) -> dict:
     try:
-        t = yf.Ticker(ticker)
+        t = yf.Ticker(ticker, session=_yf_session)
         info = t.info or {}
         holdings = []
         try:
@@ -233,7 +246,7 @@ def get_etf_details(ticker: str) -> dict:
 @st.cache_data(ttl=300)
 def is_etf(ticker: str) -> bool:
     try:
-        t = yf.Ticker(ticker)
+        t = yf.Ticker(ticker, session=_yf_session)
         info = t.info or {}
         qt = info.get("quoteType", "")
         return qt in ("ETF", "MUTUALFUND")

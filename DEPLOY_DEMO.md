@@ -15,10 +15,10 @@ I can't log in as you). ~10–15 minutes, at your computer.
   Keep it **Private** (your `.env` and `venv` are already git-ignored, so no
   secrets get uploaded).
 
-## 2. Use the slim requirements for the cloud
-- In the repo, rename **`requirements-cloud.txt` → `requirements.txt`**
-  (or paste its contents over the existing `requirements.txt`) and commit.
-  This drops the heavy torch/Kronos libs the free tier can't handle.
+## 2. Requirements (already done)
+- `requirements.txt` is already the slim, cloud-ready list (no torch/Kronos), so
+  the free-tier build is fast. Nothing to change.
+- (For local dev with the Kronos model, use `requirements-local.txt` instead.)
 
 ## 3. Deploy on Streamlit Community Cloud
 - Go to https://share.streamlit.io and sign in **with GitHub**.
@@ -27,8 +27,10 @@ I can't log in as you). ~10–15 minutes, at your computer.
 - Click **Advanced settings → Secrets** and paste exactly:
   ```
   DEMO_ONLY = "true"
-  FRED_API_KEY = "2c12429352d97f7eb5b2261aad583fdd"
+  FRED_API_KEY = "paste-your-own-fred-key-here"
   ```
+  (Get a free FRED key at https://fredaccount.stlouisfed.org/apikeys — don't
+  commit the real value anywhere.)
   (Do **NOT** add TIGER_* or LIVE_UNLOCK_HASH — leaving them out is what keeps
   the public copy demo-only.)
 - Click **Deploy**. First build takes a few minutes.
