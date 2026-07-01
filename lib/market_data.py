@@ -72,6 +72,20 @@ def get_quote(ticker: str) -> dict:
             or full_info.get("regularMarketPrice")
             or full_info.get("regularMarketPreviousClose")
         )
+        # Fallback: quoteSummary (used by .info) needs a crumb cookie that can
+        # fail on the very first request from a fresh session — the chart endpoint
+        # (v8/finance/chart, same as yf.download) doesn't need one and is already
+        # proven reliable.  Only triggered when .info returns no price.
+        if not last_price:
+            hist = yf.Ticker(ticker, session=_yf_session).history(
+                period="5d", interval="1d", auto_adjust=True
+            )
+            if not hist.empty and "Close" in hist.columns:
+                closes = hist["Close"].dropna()
+                if len(closes) >= 1:
+                    last_price = float(closes.iloc[-1])
+                if not prev_close and len(closes) >= 2:
+                    prev_close = float(closes.iloc[-2])
         change = (last_price - prev_close) if (last_price and prev_close) else None
         pct = (change / prev_close * 100) if (change is not None and prev_close) else None
         return {
