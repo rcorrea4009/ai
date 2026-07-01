@@ -1,20 +1,11 @@
-# Dashboard
+# Public demo requirements (torch/Kronos omitted; runs with DEMO_ONLY=true)
 streamlit>=1.35.0
 yfinance>=0.2.40
 plotly>=5.22.0
-# pandas 3.0+ required: pandas 2.2.x segfaults on to_datetime against numpy>=2.5 (Py 3.13)
 pandas>=3.0.0
 fredapi>=0.5.2
 python-dotenv>=1.0.0
 anthropic>=0.28.0
 requests>=2.31.0
 tigeropen>=3.5.0
-
-# Pre-existing (Kronos ML)
 numpy
-torch>=2.0.0
-einops==0.8.1
-huggingface_hub==0.33.1
-matplotlib==3.9.3
-tqdm==4.67.1
-safetensors==0.6.2
