@@ -1,0 +1,14 @@
+# Slim requirements for the PUBLIC DEMO deploy (Streamlit Community Cloud).
+# Kronos/torch are intentionally omitted — the demo runs with DEMO_ONLY=true,
+# which skips the heavy model. Everything else (scan, backtest, Monte Carlo,
+# news, charts) works. Rename this to requirements.txt on the deploy branch.
+streamlit>=1.35.0
+yfinance>=0.2.40
+plotly>=5.22.0
+pandas>=3.0.0
+fredapi>=0.5.2
+python-dotenv>=1.0.0
+anthropic>=0.28.0
+requests>=2.31.0
+tigeropen>=3.5.0
+numpy

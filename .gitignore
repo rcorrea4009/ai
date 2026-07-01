@@ -10,7 +10,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -67,6 +66,13 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Dashboard secrets & personal data
+.streamlit/secrets.toml
+data/portfolio.json
+
+# Downloaded assets (re-runnable via scripts/fetch_logos.py)
+# assets/logos/   ← uncomment to exclude logos from git
 
 # Temporary files
 *.tmp
