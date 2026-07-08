@@ -22,6 +22,7 @@ from lib.best_pick import find_best_pick
 from lib import tiger_client as tiger
 from lib import paper_trader as paper
 from lib import auth
+from lib import ui
 
 st.set_page_config(
     page_title=f"Tiger Trade — {APP_TITLE}",
@@ -30,6 +31,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+ui.inject()
 st.markdown("""
 <style>
     section.main > div { font-size: 17px; }
@@ -45,7 +47,10 @@ with st.sidebar:
     st.caption("Educational market research tool")
     st.divider()
 
-st.title("💵 Tiger Trade")
+ui.hero("💵 Tiger Trade",
+        "AI Best Pick, strategy backtests, Monte-Carlo outcomes and one-click bracket orders. "
+        "Demo is open; live trading is password-locked.",
+        pills=["AI Best Pick", "Backtest + Kronos", "Bracket orders"])
 
 # Watchlist (defined early so the AI Best Pick section above the scan can use it)
 default_watchlist = (

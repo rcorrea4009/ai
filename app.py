@@ -6,6 +6,7 @@ import streamlit as st
 from lib.config import DISCLOSURE, APP_TITLE, APP_ICON
 from lib.market_data import INDEX_TICKERS, PERIOD_MAP, get_quotes_bulk, get_history
 from lib.charts import render_sparkline
+from lib import ui
 import plotly.graph_objects as go
 
 st.set_page_config(
@@ -15,26 +16,13 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+ui.inject()
 st.markdown("""
 <style>
-    section.main > div { font-size: 17px; }
-    .metric-card {
-        background: #1e1e2e;
-        border-radius: 10px;
-        padding: 12px 16px;
-        margin-bottom: 8px;
-    }
-    .chip {
-        display: inline-block;
-        padding: 2px 10px;
-        border-radius: 12px;
-        font-size: 13px;
-        margin: 2px;
-    }
-    .headline-row {
-        border-bottom: 1px solid #333;
-        padding: 8px 0;
-    }
+    .metric-card { background:#141a24; border:1px solid #242e40; border-radius:14px;
+                   padding:14px 16px; margin-bottom:8px; box-shadow:0 4px 16px rgba(0,0,0,.25); }
+    .chip { display:inline-block; padding:2px 10px; border-radius:12px; font-size:13px; margin:2px; }
+    .headline-row { border-bottom:1px solid #242e40; padding:8px 0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -43,8 +31,12 @@ with st.sidebar:
     st.caption("Educational market research tool")
     st.divider()
 
-st.title(f"{APP_ICON} {APP_TITLE}")
-st.caption("Real-time market data for educational and research purposes.")
+ui.hero(
+    f"{APP_ICON} {APP_TITLE}",
+    "AI-assisted market research — live data, Kronos forecasts, strategy backtests and "
+    "risk-managed trade plans. Educational only, not financial advice.",
+    pills=["● Live market data", "Kronos AI", "Backtested signals"],
+)
 
 period_options = list(PERIOD_MAP.keys())
 default_period = "1D"

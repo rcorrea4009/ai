@@ -7,6 +7,7 @@ import streamlit as st
 from lib.config import DISCLOSURE, APP_TITLE, APP_ICON
 from lib import report_store
 from lib import tiger_client as tiger
+from lib import ui
 
 st.set_page_config(
     page_title=f"Daily Log — {APP_TITLE}",
@@ -14,6 +15,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+ui.inject()
 
 with st.sidebar:
     st.markdown(f"## {APP_ICON} {APP_TITLE}")
