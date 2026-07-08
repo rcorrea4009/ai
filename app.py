@@ -118,6 +118,7 @@ with nav_cols[2]:
     st.page_link("pages/8_🧠_AI_Verdict.py", label="🧠 AI Verdict", use_container_width=True)
     st.page_link("pages/9_💵_Tiger_Trade.py", label="💵 Tiger Trade", use_container_width=True)
     st.page_link("pages/10_📔_Daily_Log.py", label="📔 Daily Log", use_container_width=True)
+    st.page_link("pages/11_🇮🇳_Kotak.py", label="🇮🇳 Kotak Neo", use_container_width=True)
 
 st.divider()
 st.caption(DISCLOSURE)
