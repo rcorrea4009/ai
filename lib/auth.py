@@ -11,7 +11,6 @@ Security model:
 """
 import os
 import hashlib
-import streamlit as st
 
 _SALT = "kronos-live-guard-v1"
 
@@ -38,10 +37,12 @@ def check(pw: str) -> bool:
 
 
 def live_unlocked() -> bool:
+    import streamlit as st
     return bool(st.session_state.get("_live_unlocked"))
 
 
 def try_unlock(pw: str) -> bool:
+    import streamlit as st
     if check(pw):
         st.session_state["_live_unlocked"] = True
         return True
@@ -49,4 +50,5 @@ def try_unlock(pw: str) -> bool:
 
 
 def lock():
+    import streamlit as st
     st.session_state["_live_unlocked"] = False

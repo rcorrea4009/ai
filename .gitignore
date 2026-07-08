@@ -80,3 +80,6 @@ data/portfolio.json
 temp/
 tmp/
 .python-version
+
+# generated daily reports (logs live in-app now)
+reports/
