@@ -83,3 +83,6 @@ tmp/
 
 # generated daily reports (logs live in-app now)
 reports/
+
+# in-app log store (contains account balances)
+data/reports.json

@@ -156,20 +156,13 @@ def main():
     except Exception:
         pass
     report = build(args.capital, args.label)
-    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    rdir = os.path.join(root, "reports")
-    os.makedirs(rdir, exist_ok=True)
-    fname = f"{datetime.now().strftime('%Y-%m-%d')}_{args.label}.md"
-    path = os.path.join(rdir, fname)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(report)
+    # Save into the in-app log store (morning/evening slot, keeps ~a week).
+    slot = "morning" if "morning" in args.label.lower() else (
+        "evening" if "evening" in args.label.lower() else args.label.lower())
+    from lib.report_store import save as save_report
+    save_report(slot, report)
     print(report)
-    print(f"\n[saved to {path}]")
-    if args.open:
-        try:
-            os.startfile(path)  # noqa
-        except Exception:
-            pass
+    print(f"\n[saved to in-app log store · slot={slot}]")
 
 
 if __name__ == "__main__":
