@@ -133,6 +133,30 @@ def get_positions() -> list[dict]:
         return []
 
 
+def get_open_orders() -> list[dict]:
+    """Pending/active orders (e.g. the take-profit and stop-loss legs of a bracket)."""
+    clients = _get_clients()
+    if clients is None:
+        return []
+    trade_client, _, account = clients
+    try:
+        orders = trade_client.get_open_orders(account=account)
+        out = []
+        for o in orders or []:
+            out.append({
+                "symbol": getattr(o.contract, "symbol", "?"),
+                "action": getattr(o, "action", "?"),
+                "quantity": getattr(o, "quantity", 0),
+                "type": str(getattr(o, "order_type", "") or ""),
+                "limit_price": getattr(o, "limit_price", None),
+                "stop_price": getattr(o, "aux_price", None),
+                "status": str(getattr(o, "status", "") or ""),
+            })
+        return out
+    except Exception:
+        return []
+
+
 def preview_market_order(symbol: str, action: str, quantity: int, currency: str = "USD") -> dict:
     """
     Dry-run an order via Tiger's preview endpoint (commission, margin impact).
