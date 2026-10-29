@@ -12,6 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="$10K">
+<script>window.APP_VERSION = "3 (30 Oct)";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/favicon-64.png">
@@ -1051,7 +1052,7 @@ function viewSettings(c) {
     <div class="field full"><span class="lab">Custom categories</span><div class="chips">${s.customCategories.map((k, i) => `<span class="chip">${esc(k)}<button aria-label="Remove ${esc(k)}" data-act="rm-cat" data-i="${i}">×</button></span>`).join("") || '<span class="xs muted">None yet</span>'}</div>
     <div style="display:flex;gap:8px"><input id="newcat" placeholder="e.g. Gym" class="inline-in" style="flex:1;min-width:0;font-size:16px;background:var(--surface-2)"><button class="btn" data-act="add-cat">Add</button></div></div>
   </div></section>
-  <section class="card"><h2>Your data</h2>
+  <section class="card"><div class="card-h"><h2>Your data</h2>${window.APP_VERSION ? `<span class="pill neutral">App version ${esc(window.APP_VERSION)}</span>` : ""}</div>
     <div class="note info"><b>${store.status === "synced" ? "Saved to your Claude account" : "Saved in this browser"}</b><span>${store.status === "synced" ? "Your tracker is stored privately under your Claude account, so it opens with your data on any device where you're signed in. A copy is also kept in this browser." : "Your data is stored only in this browser on this device. It won't sync to other devices. Export a backup regularly."} Nothing here is connected to your bank or employer. Every amount is something you entered.</span></div>
     <div class="actions">
       <button class="btn" data-act="csv" data-kind="txns">Savings CSV</button>
@@ -1845,7 +1846,11 @@ new MutationObserver(reTheme).observe(document.documentElement, { attributes: tr
   initRemote();
   initScan();
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { }
-  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => { });
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    const hadController = !!navigator.serviceWorker.controller; let reloading = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (!hadController || reloading) return; reloading = true; if (document.getElementById("modal").hidden) location.reload(); });
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(reg => { reg.update().catch(() => { }); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") reg.update().catch(() => { }); }); }).catch(() => { });
+  }
 })();
 </script>
 </body>
