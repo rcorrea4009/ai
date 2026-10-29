@@ -255,7 +255,7 @@ tr.best td{background:var(--accent-soft)}
 
 /* forms */
 .form{display:grid;gap:14px}
-.fgrid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.fgrid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
 .fgrid .full{grid-column:1/-1}
 .fgrid>*{min-width:0}
 .field{display:grid;gap:5px}
@@ -285,6 +285,11 @@ tr.best td{background:var(--accent-soft)}
 .days-pick input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;pointer-events:none}
 .summary-box{background:var(--surface-2);border-radius:var(--r-md);padding:12px 14px;display:grid;gap:6px;font-size:.88rem}
 .summary-box .kv{padding:4px 0;border:0}
+.scanbox{display:grid;gap:10px;background:var(--accent-soft);border-radius:var(--r-md);padding:14px}
+.scanbox b{display:block}
+.scanbox label.btn{justify-self:start}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--accent-soft);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:4px}
+@keyframes spin{to{transform:rotate(360deg)}}
 .inline-in{padding:8px 10px;border:1.5px solid transparent;border-radius:11px;background:var(--surface);font-weight:600}
 
 /* modal: bottom sheet */
@@ -624,6 +629,7 @@ const I = {
   cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.5 11h10.5l2-8H6.2"/><circle cx="9" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></svg>',
   flag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>',
   out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0-4 4m4-4 4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
 };
 const VIEWS = [["dash", "Dashboard"], ["pay", "Paychecks"], ["save", "Savings"], ["txn", "Transactions"], ["stats", "Analytics"], ["set", "Settings"]];
@@ -705,7 +711,7 @@ function viewDash(c) {
     <div class="card-h"><h2>Next pay</h2><span class="pill ${c.s.payConfirmed ? "neutral" : "info"}">${c.s.payConfirmed ? "Expected" : "Assumed"}</span></div>
     <div class="nextpay"><div class="dateblock"><span>${DOW[nd.getUTCDay()]}</span><b>${nd.getUTCDate()}</b><span>${nd.toLocaleDateString("en-NZ", { timeZone: "UTC", month: "short" })}</span></div>
       <div><div class="xs muted">Put away</div><div class="amt-l">${money(nextSave)}</div><div class="xs muted">${isFinite(c.neededPct) ? pct(Math.min(1, c.neededPct)) : "100%"} of about ${money(next.net)} take-home · ${next.workDays} workday${next.workDays === 1 ? "" : "s"}</div></div></div>
-    <button class="btn primary block" data-act="add-pay" data-date="${next.date}">${I.plus} Record this pay</button>
+    <div class="actions" style="display:grid;grid-template-columns:${scan.mode ? "1fr 1fr" : "1fr"};gap:8px">${scan.mode ? `<button class="btn" data-act="scan-pay" data-date="${next.date}">${I.camera} Upload payslip</button>` : ""}<button class="btn primary" data-act="add-pay" data-date="${next.date}">${I.plus} Record this pay</button></div>
     ${c.overdue.length ? `<div class="note warn"><b>${c.overdue.length} expected pay${c.overdue.length > 1 ? "s" : ""} not recorded</b><span>${c.overdue.map(p => fmtDate(p.date)).join(", ")}. Record it once the money is in your account.</span></div>` : ""}
   </section>` : `<section class="card"><div class="empty"><b>No more paydays before ${fmtDate(s.deadline)}</b><span>Check your pay schedule in Settings.</span></div></section>`}
   <section class="qa" aria-label="Quick actions">
@@ -739,6 +745,7 @@ function viewDash(c) {
 }
 function addSheet() {
   openModal("Add", `<div class="addlist">
+    ${scan.mode ? `<button type="button" data-act="scan-pay">${I.camera}<div><b>Upload payslip</b><span>${scan.mode === "ocr" ? "Your phone reads it" : "Claude reads it"} and fills in your pay</span></div></button>` : ""}
     <button type="button" data-act="add-pay">${I.pay}<div><b>Paycheck</b><span>Record pay that reached your account</span></div></button>
     <button type="button" data-act="add-txn" data-type="deposit">${I.piggy}<div><b>Savings deposit</b><span>Money moved into savings</span></div></button>
     <button type="button" data-act="add-exp">${I.cart}<div><b>Expense</b><span>Something you spent</span></div></button>
@@ -760,7 +767,7 @@ function viewPay(c) {
   const pcs = [...c.pcs].reverse();
   const upcoming = c.future.slice(0, 6);
   return `${sampleBanner()}
-  <div class="card-h"><h2 class="page-title">Paychecks</h2><button class="btn primary" data-act="add-pay">${I.plus} Add Paycheck</button></div>
+  <div class="card-h"><h2 class="page-title">Paychecks</h2><div class="actions">${scan.mode ? `<button class="btn" data-act="scan-pay">${I.camera} Upload payslip</button>` : ""}<button class="btn primary" data-act="add-pay">${I.plus} Add Paycheck</button></div></div>
   <div class="grid4">
     <div class="tile"><span class="label">Pays recorded</span><b>${pcs.length}</b><span class="xs">${sum(pcs, p => p.hours).toFixed(1)} hours</span></div>
     <div class="tile"><span class="label">Gross earned</span><b>${money(sum(pcs, p => p.gross))}</b><span class="xs">before deductions</span></div>
@@ -1162,7 +1169,7 @@ function openModal(title, body, { submit = "Save", onSubmit = null, danger = fal
   document.body.style.overflow = "hidden";
   setTimeout(() => { const f = sheet.querySelector("input:not([type=hidden]):not([type=checkbox]):not([type=radio]),select,textarea"); (f || sheet.querySelector("button")).focus({ preventScroll: true }); }, 30);
 }
-function closeModal() { document.getElementById("modal").hidden = true; document.body.style.overflow = ""; modalSubmit = null; if (lastFocus && lastFocus.focus) try { lastFocus.focus({ preventScroll: true }); } catch (e) { } }
+function closeModal() { if (scan.busy) { scan.busy.abort(); scan.busy = null; } document.getElementById("modal").hidden = true; document.body.style.overflow = ""; modalSubmit = null; if (lastFocus && lastFocus.focus) try { lastFocus.focus({ preventScroll: true }); } catch (e) { } }
 function formErr(msg) { const el = document.querySelector("#mform .form-err"); if (!el) return; el.hidden = !msg; el.innerHTML = msg ? `<b>Check this</b><span>${msg}</span>` : ""; }
 function fieldErr(id, msg) { const f = document.querySelector(`.field[data-for="${id}"]`); if (!f) return; f.classList.toggle("err", !!msg); const m = f.querySelector(".errmsg"); m.hidden = !msg; m.textContent = msg || ""; }
 function clearErrs() { document.querySelectorAll("#mform .field.err").forEach(f => { f.classList.remove("err"); f.querySelector(".errmsg").hidden = true; }); formErr(""); }
@@ -1180,6 +1187,187 @@ function reqMoney(id, label, { allowZero = true, required = true } = {}) {
 }
 function reqDate(id, label) { const v = val(id); if (!isDate(v)) { fieldErr(id, label + " is required"); return null; } if (v < "2000-01-01" || v > "2100-12-31") { fieldErr(id, "Enter a realistic date"); return null; } return v; }
 
+/* ---- payslip scanning (Claude reads a photo of the payslip) ---- */
+const scan = { fn: null, limits: null, busy: null, mode: null };
+async function initScan() {
+  try {
+    if (!window.claude) { scan.mode = "ocr"; scan.limits = { mediaTypes: [], maxInputBytes: 30e6 }; if (ui.view === "pay" || ui.view === "dash") renderAll(); return; }
+    if (typeof window.claude.use !== "function") return;
+    const s = await claude.use("sample"); if (!s) return;
+    const lim = await s.limits().catch(() => null);
+    if (lim && lim.images) { scan.fn = s; scan.mode = "claude"; scan.limits = lim.images; if (ui.view === "pay" || ui.view === "dash") renderAll(); }
+  } catch (e) { }
+}
+function scanBlock() {
+  if (!scan.mode) return "";
+  const local = scan.mode === "ocr";
+  return `<div class="scanbox" id="scanbox">
+    <div><b>Upload your payslip</b><span class="xs muted">Take a photo or screenshot. ${local ? "Your phone reads" : "Claude reads"} the figures and fills this form in for you to check.</span></div>
+    <label class="btn primary" for="pc-slip">${I.camera} Upload payslip</label>
+    <input type="file" id="pc-slip" accept="${local ? "image/*" : esc(scan.limits.mediaTypes.join(","))}" hidden>
+    <div id="scan-status" class="xs" hidden></div>
+    <span class="xs muted">${local ? "The photo is read on this phone and never uploaded anywhere. A flat, well-lit photo or a screenshot reads best." : "The photo is only used to read the numbers and isn't saved in the app. You can cover your IRD number first if you like."}</span>
+  </div>`;
+}
+const SCAN_PROMPT = `The attached image is a New Zealand employee payslip. Read it and return ONLY a JSON object with these keys:
+{"payDate": "YYYY-MM-DD or null", "periodStart": "YYYY-MM-DD or null", "periodEnd": "YYYY-MM-DD or null",
+ "hours": number or null, "hourlyRate": number or null, "gross": number or null,
+ "paye": number or null, "acc": number or null, "studentLoan": number or null, "kiwiSaver": number or null,
+ "otherDeductions": number or null, "net": number or null, "taxCode": "string or null",
+ "notes": "one short sentence on anything unusual, such as holiday pay, overtime or allowances, or null", "readable": true or false}
+Rules: use THIS pay period's amounts, never year-to-date (YTD) totals. Dates on NZ payslips are day/month/year. Numbers are plain decimals in NZD with no $ sign or commas.
+"paye" is income tax (PAYE). If the payslip combines PAYE and ACC earners' levy in one line, put the total in "paye" and set "acc" to null.
+"kiwiSaver" is only the employee's own deduction, not the employer contribution. "otherDeductions" is the sum of any other deductions taken from pay.
+"net" is the amount paid into the bank account. Add up "hours" across all paid hour lines (ordinary, overtime, public holiday). Use null for anything you cannot see clearly. If the image is not a payslip or is unreadable, set "readable" to false.`;
+async function scanPayslip(file) {
+  const st = document.getElementById("scan-status");
+  const say = (msg, bad) => { if (!st) return; st.hidden = false; st.innerHTML = msg; st.style.color = bad ? "var(--bad)" : "var(--muted)"; };
+  if (!scan.mode || !file) return;
+  if (scan.limits.maxInputBytes && file.size > scan.limits.maxInputBytes) return say("That file is too large. Try a screenshot or a smaller photo.", true);
+  if (scan.mode === "claude" && scan.limits.mediaTypes.length && file.type && !scan.limits.mediaTypes.includes(file.type)) return say("Use a photo or screenshot (" + scan.limits.mediaTypes.map(t => t.split("/")[1].toUpperCase()).join(", ") + "). For a PDF payslip, take a screenshot of it first.", true);
+  if (scan.busy) scan.busy.abort();
+  const ctl = new AbortController(); scan.busy = ctl;
+  say('<span class="spin" aria-hidden="true"></span> Reading your payslip…');
+  let r;
+  try { r = scan.mode === "ocr" ? await ocrRead(file, say, ctl.signal) : await scan.fn.json(SCAN_PROMPT, { images: [file], signal: ctl.signal, cache: false }); }
+  catch (e) {
+    if (scan.busy !== ctl) return;
+    scan.busy = null;
+    const map = { cancelled: "", not_granted: "Claude wasn't given permission to read images on this page. You can allow it from the page's Permissions menu.", rate_limited: "Too many requests right now. Wait a minute and try again.", image_rejected: "That image couldn't be used. Try a JPG or PNG screenshot.", invalid_json: "Couldn't read the payslip clearly. Try a sharper photo, or type the figures in.", refused: "Couldn't read that image. Type the figures in instead.", empty_completion: "Couldn't read the payslip clearly. Try a sharper photo, or type the figures in." };
+    const m = e && e.code in map ? map[e.code] : scan.mode === "ocr" ? (e && e.message === "decode" ? "This phone couldn't open that image. Try a screenshot (PNG or JPG)." : e && e.message === "load" ? "The payslip reader couldn't load. Connect to the internet once so it can download, then try again." : "Couldn't read that photo. Try a sharper, flatter photo or a screenshot, or type the figures in.") : "Payslip reading isn't available right now. Type the figures in instead.";
+    if (m) say(m, true); else st && (st.hidden = true);
+    return;
+  }
+  if (scan.busy !== ctl) return;
+  scan.busy = null;
+  if (!document.getElementById("pc-net")) return;
+  if (!r || typeof r !== "object" || r.readable === false) return say("That doesn't look like a readable payslip. Try a clearer photo, or type the figures in.", true);
+  const num = v => { const n = typeof v === "string" ? Number(v.replace(/[$,\s]/g, "")) : v; return typeof n === "number" && isFinite(n) && n >= 0 && n < 1e6 ? r2(n) : null; };
+  const date = v => typeof v === "string" && isDate(v) && v > "2000-01-01" && v < "2100-01-01" ? v : null;
+  const filled = [];
+  const set = (id, v, label) => { if (v == null) return; const el = document.getElementById(id); if (!el) return; el.value = typeof v === "number" ? v.toFixed(id === "pc-hours" ? 2 : 2) : v; filled.push(label); };
+  const f = document.getElementById("mform");
+  set("pc-payDate", date(r.payDate), "pay date");
+  set("pc-ps", date(r.periodStart), "period");
+  set("pc-pe", date(r.periodEnd), null);
+  const hours = num(r.hours); if (hours != null) { f.dataset.hoursTouched = "1"; set("pc-hours", hours, "hours"); }
+  set("pc-rate", num(r.hourlyRate), "rate");
+  const gross = num(r.gross); if (gross != null) { f.dataset.grossTouched = "1"; set("pc-gross", gross, "gross"); }
+  const paye = num(r.paye), acc = num(r.acc);
+  if (paye != null || acc != null) set("pc-paye", (paye || 0) + (acc || 0), "tax");
+  set("pc-sl", num(r.studentLoan) ?? (paye != null ? 0 : null), "student loan");
+  set("pc-ks", num(r.kiwiSaver) ?? (paye != null ? 0 : null), null);
+  set("pc-other", num(r.otherDeductions) ?? (paye != null ? 0 : null), null);
+  set("pc-net", num(r.net), "net pay");
+  document.getElementById("pc-dsrc").value = "payslip";
+  const notesEl = document.getElementById("pc-notes");
+  const extra = [typeof r.notes === "string" && r.notes.trim() ? r.notes.trim().slice(0, 300) : "", typeof r.taxCode === "string" && r.taxCode.trim() ? "Tax code on payslip: " + r.taxCode.trim().slice(0, 20) : ""].filter(Boolean).join(" ");
+  if (extra && notesEl && !notesEl.value.trim()) notesEl.value = extra;
+  updatePayForm();
+  const labels = filled.filter(Boolean);
+  if (!labels.length) return say("Couldn't find the figures on that image. Type them in instead.", true);
+  say(`<b style="color:var(--accent)">✓ Filled in from your payslip:</b> ${esc(labels.join(", "))}. Check every number against the payslip before you save.${num(r.net) == null ? " <b>Net pay wasn't found. Enter it yourself.</b>" : ""}`);
+}
+
+/* On-device reading (standalone app): Tesseract OCR plus NZ payslip text rules. */
+let ocrLoad = null;
+function loadOCR() {
+  if (window.Tesseract) return Promise.resolve();
+  if (!ocrLoad) ocrLoad = new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "ocr/tesseract.min.js"; sc.onload = res; sc.onerror = () => { ocrLoad = null; rej(new Error("load")); }; document.head.appendChild(sc); });
+  return ocrLoad;
+}
+function fileToCanvas(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const long = Math.max(img.naturalWidth, img.naturalHeight);
+      const k = long > 2600 ? 2600 / long : long < 1400 ? 1400 / long : 1;
+      const cv = document.createElement("canvas"); cv.width = Math.round(img.naturalWidth * k); cv.height = Math.round(img.naturalHeight * k);
+      const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); g.filter = "grayscale(1) contrast(1.25)"; g.drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url); res(cv);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("decode")); };
+    img.src = url;
+  });
+}
+async function ocrRead(file, say, signal) {
+  say('<span class="spin" aria-hidden="true"></span> Getting the reader ready… (first time takes a little longer)');
+  await loadOCR();
+  const cv = await fileToCanvas(file);
+  if (signal.aborted) throw { code: "cancelled" };
+  const worker = await Tesseract.createWorker("eng", 1, {
+    workerPath: "ocr/worker.min.js", corePath: "ocr/core", langPath: "ocr/lang", gzip: true,
+    logger: m => { if (m.status === "recognizing text" && !signal.aborted) say(`<span class="spin" aria-hidden="true"></span> Reading your payslip… ${Math.round(m.progress * 100)}%`); }
+  });
+  try {
+    if (signal.aborted) throw { code: "cancelled" };
+    const score = r => ["gross", "paye", "studentLoan", "net", "hours", "payDate"].filter(k => r[k] != null).length;
+    let best = null;
+    for (const psm of ["4", "3", "6"]) {
+      if (signal.aborted) throw { code: "cancelled" };
+      await worker.setParameters({ tessedit_pageseg_mode: psm, preserve_interword_spaces: "1" });
+      const { data } = await worker.recognize(cv);
+      const r = parseSlipText(data.text || "");
+      if (!best || score(r) > score(best)) best = r;
+      if (best.gross != null && best.net != null) break;
+    }
+    return best;
+  } finally { worker.terminate(); }
+}
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
+function datesIn(line) {
+  const out = [], yy = y => y.length === 2 ? "20" + y : y;
+  const ok = (y, m, d) => { m = +m; d = +d; if (m < 1 || m > 12 || d < 1 || d > 31) return; const s = yy(y) + "-" + pad(m) + "-" + pad(d); if (isDate(s)) out.push({ s, i: out.length }); };
+  let m; const re1 = /\b(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4}|\d{2})\b/g;
+  while ((m = re1.exec(line))) ok(m[3], m[2], m[1]);
+  const re2 = /\b(\d{1,2})(?:st|nd|rd|th)?[\s\-]+([A-Za-z]{3,9})[\s\-,]+(\d{4}|\d{2})\b/g;
+  while ((m = re2.exec(line))) { const mo = MONTHS[m[2].slice(0, 4).toLowerCase()] || MONTHS[m[2].slice(0, 3).toLowerCase()]; if (mo) ok(m[3], mo, m[1]); }
+  const re3 = /\b(\d{4})-(\d{2})-(\d{2})\b/g;
+  while ((m = re3.exec(line))) ok(m[1], m[2], m[3]);
+  return out.map(x => x.s);
+}
+function parseSlipText(text) {
+  const lines = text.split(/\r?\n/).map(l => l.replace(/[|]/g, " ").replace(/\s+/g, " ").trim()).filter(Boolean);
+  const stripDates = l => l.replace(/\b\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}\b/g, " ").replace(/\b\d{4}-\d{2}-\d{2}\b/g, " ");
+  const money = l => (stripDates(l).match(/\d{1,3}(?:,\d{3})+\.\d{2}|\d+\.\d{2}/g) || []).map(s => Number(s.replace(/,/g, "")));
+  const ytdOnly = /^(ytd|year to date)\b/i;
+  const find = (re, excl) => { for (const l of lines) { if (!re.test(l) || (excl && excl.test(l)) || ytdOnly.test(l)) continue; const a = money(l); if (a.length) return a[0]; } return null; };
+  const r = { payDate: null, periodStart: null, periodEnd: null, hours: null, hourlyRate: null, gross: null, paye: null, acc: null, studentLoan: null, kiwiSaver: null, otherDeductions: null, net: null, taxCode: null, notes: "Read on your phone. Double-check every figure.", readable: false };
+  r.gross = find(/\bgross\b|total (earnings|taxable|gross|pay\b)|taxable (earnings|income|pay)/i, /\bnet\b/i);
+  r.paye = find(/\bpaye\b|income tax|\btax\b/i, /tax ?code|taxable|before tax|after tax|\bnet\b/i);
+  r.acc = find(/\bacc\b|earners?'?s? levy/i, /\bpaye\b/i);
+  r.studentLoan = find(/student\s*loan|\bsl\s+(deduction|repayment)/i, /code/i);
+  r.kiwiSaver = find(/kiwi\s*saver|\bksaver\b/i, /employer|\besct\b|er contrib|company/i);
+  r.net = find(/net\s*(pay|wages|amount|salary|earnings|income)|take\s*home|amount (paid|deposited|banked)|total paid|paid to|bank (deposit|credit|payment)|net\b/i, /\bgross\b/i);
+  // hours x rate = amount lines
+  let hours = 0, rate = null, found = false;
+  for (const l of lines) {
+    if (!/hour|ordinary|\btime\b|overtime|holiday|\bhrs?\b|\bwages?\b|normal|base/i.test(l)) continue;
+    const n = (stripDates(l).match(/\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?/g) || []).map(s => Number(s.replace(/,/g, "")));
+    for (let i = 0; i + 2 < n.length; i++) {
+      const [h, p, t] = n.slice(i, i + 3);
+      if (h > 0 && h <= 120 && p >= 10 && p <= 200 && Math.abs(h * p - t) <= Math.max(0.06, t * 0.002)) { hours += h; if (rate == null || /ordinary|normal|base/i.test(l)) rate = p; found = true; break; }
+    }
+  }
+  if (found) { r.hours = r2(hours); r.hourlyRate = rate; }
+  else {
+    for (const l of lines) { const m = l.match(/(?:total\s+)?hours?(?:\s+worked)?\s*:?\s*(\d{1,3}(?:\.\d+)?)\b/i); if (m && +m[1] > 0 && +m[1] <= 120) { r.hours = +m[1]; break; } }
+    for (const l of lines) { const m = l.match(/(?:hourly\s+)?rate\s*:?\s*\$?\s*(\d{1,3}\.\d{2})/i); if (m) { r.hourlyRate = +m[1]; break; } }
+  }
+  // dates
+  for (const l of lines) { if (/pay(ment)?\s*date|date\s*(paid|of payment)|paid\s*on|pay\s*day|deposit date/i.test(l)) { const d = datesIn(l); if (d.length) { r.payDate = d[d.length - 1]; break; } } }
+  for (const l of lines) {
+    if (!/period|week\s*(ending|ended)|\bfrom\b|pay\s*week|\bto\b/i.test(l)) continue;
+    const d = datesIn(l);
+    if (d.length >= 2) { r.periodStart = d[0] < d[1] ? d[0] : d[1]; r.periodEnd = d[0] < d[1] ? d[1] : d[0]; break; }
+    if (d.length === 1 && /ending|ended|end/i.test(l)) { r.periodEnd = d[0]; r.periodStart = addDays(d[0], -6); break; }
+  }
+  for (const l of lines) { const m = l.match(/tax\s*code\s*:?\s*([A-Z]{1,3}(?:\s?SL)?)\b/i); if (m) { r.taxCode = m[1].toUpperCase(); break; } }
+  if (r.gross != null && r.net != null && r.net > r.gross) { const t = r.gross; r.gross = r.net; r.net = t; }
+  r.readable = [r.gross, r.net, r.paye, r.hours, r.payDate].some(v => v != null);
+  return r;
+}
+
 /* ---- Paycheck form ---- */
 function payForm(existing, prefillDate) {
   const s = state.settings, c = compute();
@@ -1192,7 +1380,8 @@ function payForm(existing, prefillDate) {
   const dep = isEdit && p.depositId ? state.txns.find(t => t.id === p.depositId) : null;
   const est = p._est;
   const body = `
-  ${!isEdit ? `<div class="note info"><b>Use your payslip</b><span>Enter what actually arrived in your bank account. ${est ? `Our estimate for this pay is ${money(est.net)} take-home, but it only counts once you enter the real amount.` : ""}</span></div>` : ""}
+  ${scanBlock()}
+  ${!isEdit && !scan.mode ? `<div class="note info"><b>Use your payslip</b><span>Enter what actually arrived in your bank account. ${est ? `Our estimate for this pay is ${money(est.net)} take-home, but it only counts once you enter the real amount.` : ""}</span></div>` : ""}
   <div class="fgrid">
     ${fld("pc-payDate", "Pay date", "date", p.payDate, { required: 1 })}
     ${fld("pc-hours", "Hours worked", "number", p.hours, { min: 0, step: "0.01" })}
@@ -1569,6 +1758,7 @@ document.addEventListener("click", e => {
     case "close": return closeModal();
     case "fab": return addSheet();
     case "add-pay": return payForm(null, b.dataset.date);
+    case "scan-pay": payForm(null, b.dataset.date); return setTimeout(() => document.getElementById("pc-slip")?.click(), 60);
     case "edit-pay": return payForm(state.paychecks.find(p => p.id === id));
     case "del-pay": return delPay(id);
     case "del-pay-keep": return window._keepDep && window._keepDep();
@@ -1612,6 +1802,7 @@ document.addEventListener("input", e => {
 document.addEventListener("change", e => {
   const el = e.target, s = state.settings;
   if (el.id === "pc-transferred") updatePayForm();
+  if (el.id === "pc-slip" && el.files && el.files[0]) { scanPayslip(el.files[0]); el.value = ""; return; }
   if (el.id === "importFile" && el.files[0]) { handleImport(el.files[0]); el.value = ""; return; }
   if (el.dataset.set) {
     const key = el.dataset.set, f = el.closest(".field"); const showErr = m => { if (!f) return; f.classList.toggle("err", !!m); const em = f.querySelector(".errmsg"); em.hidden = !m; em.textContent = m || ""; };
@@ -1652,6 +1843,7 @@ new MutationObserver(reTheme).observe(document.documentElement, { attributes: tr
   renderAll(); renderSync();
   if (!window.Chart) window.addEventListener("load", () => { if (window.Chart) renderAll(); });
   initRemote();
+  initScan();
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { }
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => { });
 })();

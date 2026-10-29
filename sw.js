@@ -1,5 +1,5 @@
-// Offline support: serve the app shell from cache, refresh it in the background.
-const CACHE = "savings-10k-v1";
+// Offline support. Pages load fresh when online (so updates show straight away) and from cache when offline.
+const CACHE = "savings-10k-v2";
 const SHELL = ["./", "index.html", "chart.umd.min.js", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "icons/favicon-64.png"];
 
 self.addEventListener("install", e => {
@@ -15,6 +15,11 @@ self.addEventListener("fetch", e => {
   const sameOrigin = url.origin === location.origin;
   const isFont = url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com";
   if (!sameOrigin && !isFont) return;
+  if (req.mode === "navigate") {
+    e.respondWith(fetch(req).then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put("index.html", copy)); return res; })
+      .catch(() => caches.match("index.html")));
+    return;
+  }
   e.respondWith(caches.open(CACHE).then(async cache => {
     const cached = await cache.match(req, { ignoreSearch: sameOrigin });
     const network = fetch(req).then(res => {

@@ -1,0 +1,2 @@
+tesseract.js and tesseract.js-core: Apache License 2.0 (https://github.com/naptha/tesseract.js)
+English trained data: Apache License 2.0 (https://github.com/tesseract-ocr/tessdata_best)
