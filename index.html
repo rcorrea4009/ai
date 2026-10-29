@@ -1,0 +1,1660 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>$10K by December</title>
+<meta name="description" content="Personal savings tracker for a $10,000 goal by 31 December 2026.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F3F5F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#090D0B" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="$10K">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<script src="chart.umd.min.js"></script>
+<style>
+/* Layout: phone-app shell. Compact top bar, large page titles, a deep-green balance card, borderless rounded cards, floating tab bar with an add button. */
+:root{
+  --bg:#F3F5F1; --surface:#FFFFFF; --surface-2:#EEF2EC; --line:#E2E7DF; --ink:#111915; --muted:#65716A;
+  --accent:#13714A; --accent-ink:#FFFFFF; --accent-soft:#E0F1E7; --accent-2:#62BE8F;
+  --hero-1:#0C5236; --hero-2:#1B8A5A; --hero-ink:#F3FBF6; --hero-mint:#B9F0D2; --hero-glass:rgba(255,255,255,.14);
+  --gold:#9A6F17; --gold-soft:#F6EDD7; --warn:#A04D0B; --warn-soft:#FBEBDA; --bad:#B0342A; --bad-soft:#F9E3DF;
+  --info:#355C86; --info-soft:#E4ECF5; --c-tax:#AEB8B1; --c-sl:#CE955B; --c-ks:#6E8FB5; --c-other:#C9C0AB;
+  --shadow:0 1px 2px rgba(17,25,21,.04),0 10px 30px rgba(17,25,21,.07);
+  --bar-bg:rgba(255,255,255,.82);
+  --font-display:"Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-body:"Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r-lg:24px; --r-md:18px; --r-sm:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#090D0B; --surface:#131A16; --surface-2:#19221D; --line:#222C27; --ink:#EDF3EF; --muted:#93A199;
+  --accent:#4FD08F; --accent-ink:#04140C; --accent-soft:#15301F; --accent-2:#2D8D5F;
+  --hero-1:#0B3F2A; --hero-2:#157049; --hero-ink:#F3FBF6; --hero-mint:#9DE9C1; --hero-glass:rgba(255,255,255,.10);
+  --gold:#DDB25C; --gold-soft:#2D2614; --warn:#EDA066; --warn-soft:#33241A; --bad:#F08B7E; --bad-soft:#3A1F1C;
+  --info:#8EB3DC; --info-soft:#1B2633; --c-tax:#5C6961; --c-sl:#C08550; --c-ks:#6C8DB4; --c-other:#7B7464;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.3); --bar-bg:rgba(19,26,22,.85); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#090D0B; --surface:#131A16; --surface-2:#19221D; --line:#222C27; --ink:#EDF3EF; --muted:#93A199;
+  --accent:#4FD08F; --accent-ink:#04140C; --accent-soft:#15301F; --accent-2:#2D8D5F;
+  --hero-1:#0B3F2A; --hero-2:#157049; --hero-ink:#F3FBF6; --hero-mint:#9DE9C1; --hero-glass:rgba(255,255,255,.10);
+  --gold:#DDB25C; --gold-soft:#2D2614; --warn:#EDA066; --warn-soft:#33241A; --bad:#F08B7E; --bad-soft:#3A1F1C;
+  --info:#8EB3DC; --info-soft:#1B2633; --c-tax:#5C6961; --c-sl:#C08550; --c-ks:#6C8DB4; --c-other:#7B7464;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.3); --bar-bg:rgba(19,26,22,.85); color-scheme:dark}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+.num,.big,td.n,.tile b{font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;letter-spacing:-.02em}
+h2{font-size:1.08rem;font-weight:700}
+h3{font-size:1rem;font-weight:700}
+p{margin:0}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{-webkit-user-select:none;user-select:none;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+
+.app{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:0 170px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);margin-inline:-16px;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.brand .mark{width:32px;height:32px;border-radius:10px;background:linear-gradient(150deg,var(--hero-2),var(--hero-1));color:var(--hero-ink);display:grid;place-items:center;font-weight:800;font-size:.72rem;letter-spacing:-.02em;flex:none}
+.brand h1{font-size:.98rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{display:block;color:var(--muted);font-size:.74rem;font-weight:500}
+.sync{font-size:.74rem;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.sync span{display:none}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.sync.ok i{background:var(--accent)} .sync.err i{background:var(--warn)}
+.gear{width:38px;height:38px;border-radius:12px;border:0;background:var(--surface);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.gear svg{width:19px;height:19px}
+.gear[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+
+nav.tabs{display:none}
+nav.bottom{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:30;max-width:520px;margin-inline:auto;background:var(--bar-bg);backdrop-filter:saturate(1.6) blur(18px);-webkit-backdrop-filter:saturate(1.6) blur(18px);border:1px solid var(--line);border-radius:26px;box-shadow:0 8px 30px rgba(0,0,0,.14);display:grid;grid-template-columns:repeat(5,1fr);padding:6px}
+nav.bottom button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:.66rem;font-weight:600;color:var(--muted);padding:7px 0 5px;cursor:pointer;border-radius:20px}
+nav.bottom button svg{width:23px;height:23px}
+nav.bottom button[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+.fab{position:fixed;right:max(18px,calc(50% - 360px));bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:31;width:58px;height:58px;border-radius:20px;border:0;background:linear-gradient(150deg,var(--hero-2),var(--hero-1));color:var(--hero-ink);box-shadow:0 10px 26px rgba(12,82,54,.38);display:grid;place-items:center;cursor:pointer}
+.fab svg{width:26px;height:26px}
+.fab:active{transform:scale(.95)}
+@media (min-width:900px){
+  .app{max-width:1000px;padding-block:0 60px}
+  nav.bottom{display:none}
+  .sync span{display:inline}
+  nav.tabs{display:flex;gap:4px;background:var(--surface);border-radius:999px;padding:4px;box-shadow:var(--shadow)}
+  nav.tabs button{background:none;border:0;padding:7px 14px;border-radius:999px;cursor:pointer;color:var(--muted);font-weight:600}
+  nav.tabs button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+  .gear{display:none}
+  .fab{bottom:28px}
+}
+
+.view{display:grid;gap:14px;padding-top:4px}
+.page-head{display:grid;gap:2px;padding:6px 2px 2px}
+.page-title{font-size:1.9rem;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.page-head .xs{font-weight:600}
+.grid2{display:grid;gap:14px;grid-template-columns:1fr}
+.grid3{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid4{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:700px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid4{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.grid2>*,.grid3>*,.grid4>*{min-width:0}
+
+.card{background:var(--surface);border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow);display:grid;gap:12px;min-width:0}
+.card.flat{box-shadow:none;background:var(--surface-2)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+.xs{font-size:.76rem}
+.label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.big{font-weight:800;font-size:clamp(2.2rem,9vw,3rem);line-height:1;letter-spacing:-.03em}
+.tile{background:var(--surface);border-radius:var(--r-md);padding:14px;display:grid;gap:3px;align-content:start;box-shadow:var(--shadow)}
+.tile b{font-size:1.3rem;font-weight:800;line-height:1.15;letter-spacing:-.02em}
+.tile .xs{color:var(--muted)}
+
+/* balance card */
+.hero-card{position:relative;overflow:hidden;border-radius:28px;padding:20px 20px 18px;color:var(--hero-ink);background:radial-gradient(120% 90% at 100% 0%,var(--hero-2) 0%,transparent 60%),linear-gradient(160deg,var(--hero-2),var(--hero-1) 70%);box-shadow:0 16px 40px rgba(12,82,54,.28);display:grid;gap:14px}
+.hero-card::after{content:"";position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;border:28px solid rgba(255,255,255,.06);pointer-events:none}
+.hero-top{display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;z-index:1}
+.hero-lab{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.hero-amt{font-size:clamp(2.6rem,12vw,3.6rem);font-weight:800;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums;position:relative;z-index:1}
+.hero-amt small{font-size:.45em;font-weight:700;opacity:.8;letter-spacing:-.01em}
+.hero-sub{font-size:.9rem;opacity:.9;margin-top:-6px;position:relative;z-index:1}
+.hero-bar{height:12px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden;position:relative;z-index:1}
+.hero-bar i{display:block;height:100%;border-radius:99px;background:var(--hero-mint);transition:width .8s cubic-bezier(.2,.8,.2,1);min-width:12px}
+.hero-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;position:relative;z-index:1}
+.hero-meta div{background:var(--hero-glass);border-radius:16px;padding:10px 12px;display:grid;min-width:0}
+.hero-meta b{font-size:1.05rem;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero-meta span{font-size:.72rem;opacity:.85}
+.hero-card .pill{background:rgba(255,255,255,.16);color:var(--hero-ink)}
+.hero-card .pill.bad{background:rgba(255,190,180,.22)}
+
+.nextpay{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.nextpay .dateblock{width:58px;border-radius:16px;background:var(--accent-soft);color:var(--accent);text-align:center;padding:8px 0;line-height:1.1}
+.nextpay .dateblock b{display:block;font-size:1.5rem;font-weight:800}
+.nextpay .dateblock span{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.nextpay .amt-l{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+.kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+.kv:first-child{border-top:0}
+.kv span:last-child{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.bar{height:10px;border-radius:99px;background:var(--accent-soft);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .6s ease}
+
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:.76rem;font-weight:700;white-space:nowrap}
+.pill.good{background:var(--accent-soft);color:var(--accent)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.info{background:var(--info-soft);color:var(--info)}
+.pill.gold{background:var(--gold-soft);color:var(--gold)}
+.pill.neutral{background:var(--surface-2);color:var(--muted)}
+
+.note{border-radius:var(--r-md);padding:13px 15px;font-size:.88rem;display:grid;gap:4px}
+.note.warn{background:var(--warn-soft);color:var(--ink)}
+.note.warn b{color:var(--warn)}
+.note.info{background:var(--info-soft)}
+.note.info b{color:var(--info)}
+.note.good{background:var(--accent-soft)}
+.note.good b{color:var(--accent)}
+.note.bad{background:var(--bad-soft)}
+.note.bad b{color:var(--bad)}
+
+.btn{border:0;background:var(--surface-2);padding:10px 16px;border-radius:14px;cursor:pointer;font-weight:700;font-size:.9rem;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;color:var(--ink)}
+.btn svg{width:18px;height:18px;flex:none}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad);background:var(--bad-soft)}
+.btn.danger.solid{background:var(--bad);color:#fff}
+.btn.ghost{background:none;color:var(--accent);padding-inline:8px}
+.btn.sm{padding:6px 12px;min-height:34px;font-size:.82rem;border-radius:11px}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.qa{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (min-width:700px){.qa{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.qa .btn{flex-direction:column;background:var(--surface);box-shadow:var(--shadow);padding:14px 4px 12px;font-size:.76rem;min-height:84px;text-align:center;border-radius:20px;gap:8px;font-weight:600}
+.qa .btn svg{width:22px;height:22px;padding:9px;box-sizing:content-box;border-radius:14px;background:var(--accent-soft);color:var(--accent)}
+.qa .btn.primary{background:var(--surface);color:var(--ink)}
+.qa .btn.primary svg{background:var(--accent);color:var(--accent-ink)}
+
+.seg{display:flex;background:var(--surface-2);border-radius:14px;padding:3px;gap:2px}
+.seg button{flex:1;border:0;background:none;padding:8px 12px;border-radius:11px;cursor:pointer;font-weight:600;color:var(--muted);font-size:.86rem;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.segwrap{display:grid}
+.card-h .seg{flex:1 1 280px}
+
+/* lists */
+.list{display:grid;gap:0}
+.row{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);min-width:0}
+.row:first-child{border-top:0}
+.row .main{flex:1;min-width:0}
+.row .main .t{font-weight:700;overflow-wrap:anywhere}
+.row .amt{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.amt.pos{color:var(--accent)} .amt.neg{color:var(--bad)}
+.dot{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;flex:none;font-size:.9rem;font-weight:800}
+.dot.dep{background:var(--accent-soft);color:var(--accent)}
+.dot.wd{background:var(--bad-soft);color:var(--bad)}
+.dot.int{background:var(--gold-soft);color:var(--gold)}
+.dot.adj{background:var(--info-soft);color:var(--info)}
+.row .ops{display:flex;gap:2px;flex:none}
+.iconbtn{background:none;border:0;border-radius:11px;width:36px;height:36px;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.iconbtn:hover{background:var(--surface-2);color:var(--ink)}
+.iconbtn svg{width:18px;height:18px}
+
+.empty{text-align:center;padding:24px 12px;display:grid;gap:10px;justify-items:center;color:var(--muted)}
+.empty b{color:var(--ink);font-size:1.05rem}
+
+/* paycheck card */
+.pc{border-radius:var(--r-md);padding:14px;display:grid;gap:10px;background:var(--surface-2)}
+.pc-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.pc-break{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;font-size:.84rem}
+@media (min-width:640px){.pc-break{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.pc-break div{display:flex;justify-content:space-between;gap:6px;min-width:0}
+.pc-break span:first-child{color:var(--muted)}
+.pc-break span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
+.split{height:8px;border-radius:99px;overflow:hidden;display:flex;background:var(--surface)}
+.split i{display:block;height:100%}
+
+/* calendar */
+.wk{border-radius:var(--r-md);padding:14px;display:grid;gap:10px;background:var(--surface);box-shadow:var(--shadow)}
+.wk.missed{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--bad) 50%,transparent),var(--shadow)}
+.wk.current{box-shadow:inset 0 0 0 2px var(--accent),var(--shadow)}
+.wk-h{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.day{border-radius:12px;padding:6px 2px;text-align:center;font-size:.68rem;line-height:1.25;background:var(--surface-2);color:var(--muted);min-width:0;font-weight:600}
+.day b{display:block;font-size:.9rem;color:var(--ink);font-weight:800}
+.day.work{background:var(--accent-soft);color:var(--accent)}
+.day.work b{color:var(--accent)}
+.day.off{opacity:.7}
+.day.na{opacity:.3}
+.day.hol{outline:1.5px dashed var(--gold);outline-offset:-2px}
+.day.pay{box-shadow:inset 0 -3px 0 var(--gold)}
+.wk-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;font-size:.84rem}
+@media (min-width:640px){.wk-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.wk-stats div{display:flex;justify-content:space-between;gap:8px}
+.wk-stats span:first-child{color:var(--muted)}
+.wk-stats span:last-child{font-variant-numeric:tabular-nums;font-weight:700}
+
+/* milestones */
+.ms{display:grid;gap:0}
+.ms-row{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.ms-row:first-child{border-top:0}
+.medal{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.74rem;border:2px dashed var(--line);color:var(--muted)}
+.medal.on{background:var(--gold-soft);border:2px solid var(--gold);color:var(--gold)}
+
+/* tables */
+.tablewrap{overflow-x:auto;border-radius:var(--r-md);background:var(--surface-2)}
+table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:500px}
+th,td{padding:10px 12px;text-align:left;border-top:1px solid var(--line);white-space:nowrap}
+thead th{border-top:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
+td.n,th.n{text-align:right}
+tr.best td{background:var(--accent-soft)}
+
+/* forms */
+.form{display:grid;gap:14px}
+.fgrid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.fgrid .full{grid-column:1/-1}
+.fgrid>*{min-width:0}
+.field{display:grid;gap:5px}
+.field label,.field .lab{font-size:.78rem;font-weight:700;color:var(--muted)}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border:1.5px solid transparent;border-radius:14px;background:var(--surface-2);min-height:46px;font-size:16px;font-weight:600}
+.field textarea{min-height:70px;resize:vertical;font-weight:500}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.field .hint{font-size:.75rem;color:var(--muted)}
+.field.err input,.field.err select{border-color:var(--bad)}
+.field .errmsg{font-size:.76rem;color:var(--bad);font-weight:700}
+.money-in{position:relative}
+.money-in::before{content:"$";position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-weight:700}
+.money-in input{padding-left:26px}
+.radio-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.radio-grid label{border:1.5px solid transparent;background:var(--surface-2);border-radius:14px;padding:11px;display:flex;gap:8px;align-items:center;cursor:pointer;font-size:.86rem;font-weight:600;min-width:0}
+.radio-grid label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.radio-grid input{accent-color:var(--accent)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;cursor:pointer;font-weight:500}
+.check input{width:20px;height:20px;margin-top:1px;accent-color:var(--accent);flex:none}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:4px 6px 4px 12px;font-size:.82rem;font-weight:600;background:var(--surface-2)}
+.chip button{border:0;background:none;cursor:pointer;color:var(--muted);width:24px;height:24px;border-radius:50%}
+.days-pick{display:flex;gap:6px;flex-wrap:wrap}
+.days-pick label{background:var(--surface-2);border-radius:12px;padding:8px 11px;cursor:pointer;font-size:.86rem;font-weight:700;border:1.5px solid transparent}
+.days-pick label:has(input:checked){background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.days-pick label{position:relative}
+.days-pick input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;pointer-events:none}
+.summary-box{background:var(--surface-2);border-radius:var(--r-md);padding:12px 14px;display:grid;gap:6px;font-size:.88rem}
+.summary-box .kv{padding:4px 0;border:0}
+.inline-in{padding:8px 10px;border:1.5px solid transparent;border-radius:11px;background:var(--surface);font-weight:600}
+
+/* modal: bottom sheet */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(6,12,9,.5);display:flex;align-items:flex-end;justify-content:center;animation:fade .18s ease}
+.sheet{background:var(--surface);width:100%;max-width:620px;max-height:92vh;overflow:auto;border-radius:28px 28px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom,0px));display:grid;gap:16px;box-shadow:0 -10px 40px rgba(0,0,0,.25);animation:rise .24s cubic-bezier(.2,.8,.2,1)}
+.sheet::before{content:"";width:40px;height:5px;border-radius:9px;background:var(--line);justify-self:center}
+@media (min-width:700px){.modal{align-items:center}.sheet{border-radius:28px;max-height:88vh}.sheet::before{display:none}}
+@keyframes rise{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sheet-h h2{font-size:1.3rem;font-weight:800}
+.sheet-f{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:calc(-20px - env(safe-area-inset-bottom,0px));background:var(--surface);padding-block:12px 4px}
+.sheet-f .btn{flex:1 1 auto}
+.addlist{display:grid;gap:8px}
+.addlist button{display:flex;align-items:center;gap:14px;text-align:left;border:0;background:var(--surface-2);border-radius:18px;padding:12px 14px;cursor:pointer;width:100%}
+.addlist button svg{width:22px;height:22px;padding:9px;box-sizing:content-box;border-radius:14px;background:var(--accent-soft);color:var(--accent);flex:none}
+.addlist button b{display:block;font-weight:700}
+.addlist button span{font-size:.8rem;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(160px + env(safe-area-inset-bottom,0px));z-index:70;background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:16px;font-weight:700;font-size:.88rem;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+@media (min-width:900px){.toast{bottom:28px}}
+.celebrate{text-align:center;display:grid;gap:10px;justify-items:center;padding:10px 0}
+.celebrate .medal{width:90px;height:90px;font-size:1.15rem}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:65}
+
+.chartbox{position:relative;height:230px;width:100%}
+.chartbox.tall{height:270px}
+.chartbox canvas{max-width:100%}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--muted);font-weight:600}
+.legend i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.sample-banner{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--gold-soft);border-radius:var(--r-md);padding:10px 14px;font-size:.86rem}
+hr.sep{border:0;border-top:1px solid var(--line);margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+:root{padding-bottom:0}
+html,body{min-height:100%}
+header.top{top:0;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><div class="mark" aria-hidden="true">10K</div><div style="min-width:0"><h1 id="appTitle">$10K by December</h1><small id="appSub">Savings goal tracker</small></div></div>
+    <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+    <div class="sync" id="sync"><i></i><span>Loading…</span></div>
+    <button class="gear" id="gear" data-nav="set" aria-label="Settings"></button>
+  </header>
+  <main id="view" class="view" aria-live="polite"></main>
+</div>
+<nav class="bottom" id="bottomnav" aria-label="Sections"></nav>
+<button class="fab" data-act="fab" aria-label="Add a paycheck, deposit or expense"></button>
+<div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle" id="sheet"></div></div>
+<canvas id="confetti" hidden></canvas>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+
+<script>
+"use strict";
+/* ---------------- utilities ---------------- */
+const MS = 86400000;
+const pad = n => String(n).padStart(2, "0");
+const toD = s => new Date(s + "T00:00:00Z");
+const iso = d => d.toISOString().slice(0, 10);
+const addDays = (s, n) => iso(new Date(toD(s).getTime() + n * MS));
+const daysBetween = (a, b) => Math.round((toD(b) - toD(a)) / MS);
+const dow = s => toD(s).getUTCDay();
+const todayISO = () => { const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+const isDate = s => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(toD(s));
+const r2 = x => Math.round((x + Number.EPSILON) * 100) / 100;
+const sum = (arr, f = x => x) => arr.reduce((a, x) => a + (+f(x) || 0), 0);
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-5);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function money(x) {
+  if (x == null || !isFinite(x)) return "—";
+  const n = r2(x);
+  return (n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+const money0 = x => (x < 0 ? "−" : "") + "$" + Math.round(Math.abs(x)).toLocaleString("en-NZ");
+const pct = (x, d = 0) => (isFinite(x) ? (x * 100).toFixed(d) : "—") + "%";
+const fmtDate = (s, o = {}) => isDate(s) ? toD(s).toLocaleDateString("en-NZ", { timeZone: "UTC", day: "numeric", month: "short", ...o }) : "—";
+const fmtLong = s => fmtDate(s, { weekday: "short", year: "numeric" });
+const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const weekStart = s => addDays(s, -dow(s));
+const monthKey = s => s.slice(0, 7);
+const HOLIDAYS = { "2026-10-26": "Labour Day", "2026-12-25": "Christmas Day", "2026-12-28": "Boxing Day (observed)", "2027-01-01": "New Year's Day", "2027-01-04": "2 January (observed)" };
+const BUILTIN_CATS = ["Food", "Transport", "Shopping", "Subscriptions", "Personal care", "Entertainment", "Family contributions", "Other"];
+const MILESTONES = [1000, 2500, 5000, 7500, 10000];
+
+/* ---------------- state ---------------- */
+function defaultSettings() {
+  return {
+    goal: 10000, deadline: "2026-12-31", startBalance: 0, startDate: "2026-10-19",
+    hourlyRate: 24.55, weeklyHours: 47, workDays: [0, 1, 2, 3, 4], taxCode: "M SL",
+    estimateMode: "manual", manualWeeklyNet: 855.87,
+    brackets: [{ upTo: 15600, rate: 10.5 }, { upTo: 53500, rate: 17.5 }, { upTo: 78100, rate: 30 }, { upTo: 180000, rate: 33 }, { upTo: null, rate: 39 }],
+    accRate: 1.75, accCap: 156641, studentLoan: true, slThreshold: 24128, slRate: 12,
+    kiwiSaverRate: 0, otherWeekly: 0,
+    payConfirmed: false, payFrequency: 7, firstPayday: "2026-10-28", periodEndLag: 4,
+    defaultSavePct: 100, weeklyLimit: 0, monthlyLimit: 0, customCategories: []
+  };
+}
+function defaultState() { return { version: 1, settings: defaultSettings(), paychecks: [], txns: [], expenses: [], celebrated: [], updatedAt: 0 }; }
+function normalize(o) {
+  if (!o || typeof o !== "object") return null;
+  const st = defaultState();
+  st.settings = { ...st.settings, ...(o.settings || {}) };
+  if (!Array.isArray(st.settings.brackets) || !st.settings.brackets.length) st.settings.brackets = defaultSettings().brackets;
+  if (!Array.isArray(st.settings.workDays)) st.settings.workDays = [0, 1, 2, 3, 4];
+  if (!Array.isArray(st.settings.customCategories)) st.settings.customCategories = [];
+  for (const k of ["paychecks", "txns", "expenses", "celebrated"]) st[k] = Array.isArray(o[k]) ? o[k] : [];
+  st.updatedAt = +o.updatedAt || 0;
+  return st;
+}
+let state = defaultState();
+const ui = { view: "dash", saveTab: "calc", txTab: "savings", group: "monthly", calc: null };
+
+/* ---------------- storage ---------------- */
+const LS_KEY = "savings-tracker-10k-v1";
+const store = { ref: null, status: "local", writing: false, queued: false };
+function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { } }
+function loadLocal() { try { const raw = localStorage.getItem(LS_KEY); return raw ? normalize(JSON.parse(raw)) : null; } catch (e) { return null; } }
+let remoteTimer = null;
+function persist() {
+  state.updatedAt = Date.now();
+  saveLocal();
+  if (store.ref) { clearTimeout(remoteTimer); remoteTimer = setTimeout(flushRemote, 600); }
+}
+async function flushRemote() {
+  if (!store.ref) return;
+  if (store.writing) { store.queued = true; return; }
+  store.writing = true;
+  try { await store.ref.set({ state: JSON.stringify(state), updatedAt: state.updatedAt }); store.status = "synced"; }
+  catch (e) { store.status = "error"; }
+  store.writing = false; renderSync();
+  if (store.queued) { store.queued = false; flushRemote(); }
+}
+async function initRemote() {
+  try {
+    if (!window.claude || typeof window.claude.use !== "function") { store.status = "local"; return renderSync(); }
+    const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+    if (!db || !user) { store.status = "local"; return renderSync(); }
+    const id = await user.id();
+    if (!id) { store.status = "local"; return renderSync(); }
+    const ref = db.doc("data/users/" + id + "/tracker");
+    const snap = await ref.get();
+    store.ref = ref;
+    if (snap.exists) {
+      const d = snap.data() || {};
+      let remote = null; try { remote = normalize(JSON.parse(d.state)); } catch (e) { }
+      if (remote && remote.updatedAt >= state.updatedAt) { state = remote; saveLocal(); renderAll(); }
+      else if (state.updatedAt > 0) await flushRemote();
+    } else if (state.updatedAt > 0) await flushRemote();
+    store.status = "synced";
+  } catch (e) { store.status = store.ref ? "error" : "local"; }
+  renderSync();
+}
+function renderSync() {
+  const el = document.getElementById("sync");
+  const map = { synced: ["ok", "Saved to your Claude account"], local: ["", "Saved in this browser"], error: ["err", "Offline · saved in this browser"] };
+  const [cls, txt] = map[store.status] || map.local;
+  el.className = "sync " + cls; el.querySelector("span").textContent = txt;
+}
+
+/* ---------------- payroll model ---------------- */
+const hoursPerDay = s => s.workDays.length ? s.weeklyHours / s.workDays.length : 0;
+function workDaysIn(s, a, b) {
+  const start = a < s.startDate ? s.startDate : a;
+  let n = 0;
+  for (let d = start; d <= b; d = addDays(d, 1)) if (s.workDays.includes(dow(d))) n++;
+  return n;
+}
+function annualTax(inc, br) {
+  let t = 0, prev = 0;
+  for (const b of br) {
+    const top = b.upTo == null || b.upTo === "" ? Infinity : +b.upTo;
+    if (inc > prev) t += (Math.min(inc, top) - prev) * (+b.rate) / 100;
+    prev = top; if (inc <= top) break;
+  }
+  return t;
+}
+const periodsPerYear = days => days === 7 ? 52 : days === 14 ? 26 : days === 28 ? 13 : 364 / days;
+/* Itemised NZ PAYE estimate for one pay period (tax code M SL by default). */
+function calcDeductions(s, gross, days) {
+  const P = periodsPerYear(days);
+  const paye = annualTax(gross * P, s.brackets) / P;
+  const acc = Math.min(gross, s.accCap / P) * s.accRate / 100;
+  const sl = s.studentLoan ? Math.max(0, gross - s.slThreshold / P) * s.slRate / 100 : 0;
+  return { paye, acc, sl };
+}
+function estimate(s, hours, days) {
+  const gross = hours * s.hourlyRate;
+  let { paye, acc, sl } = calcDeductions(s, gross, days);
+  if (s.estimateMode === "manual") {
+    const fullGross = s.weeklyHours * s.hourlyRate;
+    const ratio = fullGross > 0 ? Math.min(1, s.manualWeeklyNet / fullGross) : 0;
+    const totalDed = gross * (1 - ratio), calcTot = paye + acc + sl;
+    if (calcTot > 0) { const k = totalDed / calcTot; paye *= k; acc *= k; sl *= k; } else { paye = totalDed; acc = 0; sl = 0; }
+  }
+  const ks = gross * s.kiwiSaverRate / 100;
+  const other = s.otherWeekly * days / 7;
+  const net = Math.max(0, gross - paye - acc - sl - ks - other);
+  return { hours, gross, paye, acc, sl, ks, other, net };
+}
+/* Expected (not confirmed) paydays from the pay schedule settings. */
+function schedule(s, until) {
+  const out = [];
+  if (!isDate(s.firstPayday)) return out;
+  const f = Math.max(1, +s.payFrequency || 7);
+  let d = s.firstPayday, guard = 0;
+  while (d <= until && guard++ < 400) {
+    const pe = addDays(d, -(+s.periodEndLag || 0));
+    const ps = addDays(pe, -(f - 1));
+    const wd = pe < s.startDate ? 0 : workDaysIn(s, ps, pe);
+    if (wd > 0) out.push({ date: d, periodStart: ps, periodEnd: pe, workDays: wd, ...estimate(s, wd * hoursPerDay(s), f) });
+    d = addDays(d, f);
+  }
+  return out;
+}
+const signedAmt = t => t.type === "withdrawal" ? -Math.abs(t.amount) : t.type === "adjustment" ? +t.amount : Math.abs(t.amount);
+const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : (a.created || 0) - (b.created || 0));
+
+/* The single source of every derived number in the app. */
+function compute(st = state, ov = {}, balanceOverride = null) {
+  const s = { ...st.settings, ...ov };
+  const today = todayISO();
+  const txns = [...st.txns].sort(byDate);
+  const realBalance = s.startBalance + sum(txns, signedAmt);
+  const balance = balanceOverride != null ? balanceOverride : realBalance;
+  const pcs = [...st.paychecks].sort((a, b) => a.payDate < b.payDate ? -1 : 1);
+  const depById = Object.fromEntries(st.txns.map(t => [t.id, t]));
+  const pending = sum(pcs.filter(p => !p.depositId || !depById[p.depositId]), p => p.savedPlanned);
+  const netTotal = sum(pcs, p => p.net);
+  const savingsRate = netTotal > 0 ? Math.min(1, sum(pcs, p => p.savedPlanned) / netTotal) : s.defaultSavePct / 100;
+
+  const sched = schedule(s, addDays(s.deadline, 400));
+  const used = new Set();
+  for (const p of sched) {
+    const m = pcs.find(c => !used.has(c.id) && (Math.abs(daysBetween(c.payDate, p.date)) <= 3 || (isDate(c.periodStart) && isDate(c.periodEnd) && c.periodStart <= p.periodEnd && p.periodEnd <= c.periodEnd)));
+    if (m) { used.add(m.id); p.paycheck = m; }
+  }
+  const schedTo = sched.filter(p => p.date <= s.deadline);
+  const W = sum(schedTo, p => p.net);
+  const goalGap = s.goal - s.startBalance;
+  for (const p of schedTo) p.targetShare = W > 0 ? goalGap * p.net / W : 0;
+  const future = schedTo.filter(p => !p.paycheck);
+  const futureAll = sched.filter(p => !p.paycheck);
+  const overdue = future.filter(p => p.date < today);
+  const futureNet = sum(future, p => p.net);
+  const targetAt = t => {
+    if (W > 0) return s.startBalance + sum(schedTo.filter(p => p.date <= t), p => p.targetShare);
+    const span = daysBetween(s.startDate, s.deadline); if (span <= 0) return s.goal;
+    const f = Math.min(1, Math.max(0, daysBetween(s.startDate, t) / span));
+    return s.startBalance + goalGap * f;
+  };
+  const remaining = Math.max(0, s.goal - balance);
+  const needFromFuture = Math.max(0, s.goal - balance - pending);
+  const daysLeft = Math.max(0, daysBetween(today, s.deadline));
+  const weeksLeft = Math.max(1, daysLeft / 7);
+  const neededPct = futureNet > 0 ? needFromFuture / futureNet : (needFromFuture > 0 ? Infinity : 0);
+  const projected = balance + pending + futureNet * savingsRate;
+  const maxPossible = balance + pending + futureNet;
+  const targetNow = targetAt(today);
+  const projectDate = (amount, rate = savingsRate, startBal = balance + pending) => {
+    let cum = startBal;
+    if (cum >= amount - 0.005) return { date: today, now: true };
+    if (rate <= 0) return null;
+    for (const p of futureAll) { cum += p.net * rate; if (cum >= amount - 0.005) return { date: p.date < today ? today : p.date }; }
+    return null;
+  };
+  return {
+    s, today, txns, pcs, balance, realBalance, pending, savingsRate, sched, schedTo, future, futureAll, overdue, futureNet,
+    targetAt, targetNow, remaining, needFromFuture, daysLeft, weeksLeft, neededPct, projected, maxPossible,
+    perWeek: needFromFuture / weeksLeft, perPayday: future.length ? needFromFuture / future.length : null,
+    progress: s.goal > 0 ? Math.min(1, Math.max(0, balance / s.goal)) : 0,
+    ahead: balance - targetNow, projectDate, depById, started: today >= s.startDate
+  };
+}
+function milestoneList(c) {
+  const list = MILESTONES.filter(m => m < c.s.goal); list.push(c.s.goal);
+  let bal = c.s.startBalance; const reached = {};
+  for (const m of list) if (bal >= m) reached[m] = "start";
+  for (const t of c.txns) { bal += signedAmt(t); for (const m of list) if (!reached[m] && bal >= m - 0.005) reached[m] = t.date; }
+  return list.map(m => ({ amount: m, reached: c.balance >= m - 0.005 ? reached[m] || c.today : null, projected: c.balance >= m - 0.005 ? null : c.projectDate(m) }));
+}
+function weeksModel(c) {
+  const s = c.s, hpd = hoursPerDay(s), out = [];
+  let ws = weekStart(s.startDate);
+  const linked = new Set(c.pcs.map(p => p.depositId).filter(Boolean));
+  const remainingFutureNet = c.futureNet;
+  while (ws <= s.deadline) {
+    const we = addDays(ws, 6);
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(ws, i);
+      const inRange = d >= s.startDate && d <= s.deadline;
+      days.push({ date: d, inRange, work: inRange && s.workDays.includes(dow(d)), holiday: HOLIDAYS[d] || null });
+    }
+    const nWork = days.filter(x => x.work).length;
+    const est = estimate(s, nWork * hpd, 7);
+    const pays = c.schedTo.filter(p => p.date >= ws && p.date <= we);
+    const target = sum(pays, p => p.targetShare);
+    const pcsHere = pays.map(p => p.paycheck).filter(Boolean);
+    const linkedDeps = pcsHere.map(p => c.depById[p.depositId]).filter(Boolean);
+    const looseDeps = c.txns.filter(t => t.type === "deposit" && !linked.has(t.id) && t.date >= ws && t.date <= we);
+    const deposited = sum(linkedDeps, t => t.amount) + sum(looseDeps, t => t.amount);
+    const catchUp = remainingFutureNet > 0 ? sum(pays.filter(p => !p.paycheck), p => c.needFromFuture * p.net / remainingFutureNet) : 0;
+    let status;
+    const due = pays.filter(p => p.date <= c.today);
+    if (ws > c.today) status = "upcoming";
+    else if (due.some(p => !p.paycheck)) status = "awaiting";
+    else if (target > 0 && deposited >= target - 0.01) status = "saved";
+    else if (pcsHere.some(p => !p.depositId || !c.depById[p.depositId])) status = "paid";
+    else if (we < c.today && target > 0 && deposited < target - 0.01) status = "missed";
+    else if (!pays.length) status = we < c.today ? "nopay" : "upcoming";
+    else if (deposited > 0 && pays.every(p => p.paycheck)) status = deposited >= target - 0.01 ? "saved" : "missed";
+    else status = "upcoming";
+    out.push({ ws, we, days, nWork, hours: nWork * hpd, est, pays, target, deposited, catchUp, status, pcsHere, current: c.today >= ws && c.today <= we });
+    ws = addDays(ws, 7);
+  }
+  return out;
+}
+
+/* ---------------- icons ---------------- */
+const I = {
+  dash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>',
+  pay: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>',
+  save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
+  txn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h13M7 12h13M7 17h13"/><circle cx="3.5" cy="7" r=".8" fill="currentColor"/><circle cx="3.5" cy="12" r=".8" fill="currentColor"/><circle cx="3.5" cy="17" r=".8" fill="currentColor"/></svg>',
+  stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  set: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>',
+  del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  piggy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v6m0 0 3-3m-3 3L9 6"/><rect x="4" y="11" width="16" height="9" rx="2.5"/></svg>',
+  cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.5 11h10.5l2-8H6.2"/><circle cx="9" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></svg>',
+  flag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>',
+  out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0-4 4m4-4 4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+};
+const VIEWS = [["dash", "Dashboard"], ["pay", "Paychecks"], ["save", "Savings"], ["txn", "Transactions"], ["stats", "Analytics"], ["set", "Settings"]];
+
+/* ---------------- rendering ---------------- */
+function renderNav() {
+  document.getElementById("tabs").innerHTML = VIEWS.map(([k, l]) => `<button data-nav="${k}" ${ui.view === k ? 'aria-current="page"' : ""}>${l}</button>`).join("");
+  const short = { dash: "Home", pay: "Pay", save: "Plan", txn: "Activity", stats: "Stats" };
+  document.getElementById("bottomnav").innerHTML = VIEWS.filter(([k]) => short[k]).map(([k]) => `<button data-nav="${k}" ${ui.view === k ? 'aria-current="page"' : ""}>${I[k]}<span>${short[k]}</span></button>`).join("");
+  const gear = document.getElementById("gear"); gear.innerHTML = I.set; ui.view === "set" ? gear.setAttribute("aria-current", "page") : gear.removeAttribute("aria-current");
+  const fab = document.querySelector(".fab"); fab.innerHTML = I.plus; fab.hidden = ui.view === "dash";
+}
+function renderAll() {
+  const c = compute();
+  document.getElementById("appTitle").textContent = money0(c.s.goal).replace(/,000$/, "K") + " by " + fmtDate(c.s.deadline, { month: "long", day: undefined });
+  document.getElementById("appSub").textContent = money(c.balance) + " saved · " + pct(c.progress) + " of goal";
+  renderNav();
+  const v = document.getElementById("view");
+  destroyCharts();
+  const fn = { dash: viewDash, pay: viewPay, save: viewSave, txn: viewTxn, stats: viewStats, set: viewSettings }[ui.view] || viewDash;
+  v.innerHTML = fn(c);
+  afterRender(c);
+  checkMilestones(c);
+}
+const hasSample = () => state.paychecks.some(p => p.sample) || state.txns.some(t => t.sample) || state.expenses.some(e => e.sample);
+const hasRealData = () => state.paychecks.some(p => !p.sample) || state.txns.some(t => !t.sample) || state.expenses.some(e => !e.sample);
+function sampleBanner() {
+  return hasSample() ? `<div class="sample-banner"><span><b>Sample data is showing.</b> These example entries are not yours.</span><button class="btn sm" data-act="clear-sample">Remove sample data</button></div>` : "";
+}
+function statusPill(c) {
+  if (c.balance >= c.s.goal) return `<span class="pill gold">Goal reached</span>`;
+  if (!c.started && c.balance <= c.s.startBalance) return `<span class="pill info">Starts ${fmtDate(c.s.startDate)}</span>`;
+  if (c.ahead >= 1) return `<span class="pill good">Ahead by ${money(c.ahead)}</span>`;
+  if (c.ahead > -1) return `<span class="pill good">On track</span>`;
+  return `<span class="pill bad">Behind by ${money(-c.ahead)}</span>`;
+}
+function ring(p) {
+  const R = 70, C = 2 * Math.PI * R;
+  return `<div class="ring" role="img" aria-label="${pct(p)} of goal saved"><svg viewBox="0 0 168 168"><circle cx="84" cy="84" r="${R}" fill="none" stroke="var(--accent-soft)" stroke-width="14"/><circle cx="84" cy="84" r="${R}" fill="none" stroke="var(--accent)" stroke-width="14" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - p)}" style="transition:stroke-dashoffset .8s ease"/></svg><div class="pct"><div><b>${pct(p, p > 0 && p < .1 ? 1 : 0)}</b><span>of goal</span></div></div></div>`;
+}
+function scheduleNote(c) {
+  return c.s.payConfirmed ? "" : `<div class="note info"><b>Payday not confirmed yet</b><span>Pay forecasts assume weekly pay on Wednesdays for the week before (first pay ${fmtDate(c.s.firstPayday)}). Set your real payday once you know it.</span><div><button class="btn sm" data-act="goto-pay-settings">Set my payday</button></div></div>`;
+}
+
+function viewDash(c) {
+  const s = c.s;
+  const next = c.future.find(p => p.date >= c.today) || null;
+  const nextSave = next && isFinite(c.neededPct) ? Math.min(next.net, next.net * c.neededPct) : null;
+  const shortfall = s.goal - c.projected;
+  const pendingPcs = c.pcs.filter(p => p.savedPlanned > 0 && (!p.depositId || !c.depById[p.depositId]));
+  let gap = "";
+  if (c.balance < s.goal) {
+    if (c.maxPossible < s.goal - 0.5) {
+      gap = `<div class="note warn"><b>Wages alone fall ${money(s.goal - c.maxPossible)} short</b><span>Saving 100% of every pay that arrives by ${fmtDate(s.deadline)} gets you about ${money(c.maxPossible)}. The rest needs extra hours, a gift, interest or a later deadline. Your last week of December is usually paid in January.</span></div>`;
+    } else if (shortfall > 0.5) {
+      gap = `<div class="note warn"><b>${money(shortfall)} short at your current rate</b><span>You're saving ${pct(c.savingsRate)} of take-home pay. Saving ${pct(c.neededPct)} of each remaining pay gets you there.</span></div>`;
+    } else {
+      gap = `<div class="note good"><b>On course for ${money(c.projected)}</b><span>Based on the pay you've recorded and the paydays still to come, saving ${pct(c.savingsRate)} of each.</span></div>`;
+    }
+  }
+  const recent = [...c.txns].reverse().slice(0, 4);
+  const whole = Math.floor(Math.max(0, c.balance)), cents = pad(Math.round((Math.max(0, c.balance) - whole) * 100) % 100);
+  const nd = next ? toD(next.date) : null;
+  return `
+  <div class="page-head"><span class="xs muted">${toD(c.today).toLocaleDateString("en-NZ", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" })}</span><h2 class="page-title">Kia ora</h2></div>
+  ${sampleBanner()}
+  <section class="hero-card" aria-label="Savings overview">
+    <div class="hero-top"><span class="hero-lab">Total saved</span>${statusPill(c)}</div>
+    <div class="hero-amt">$${whole.toLocaleString("en-NZ")}<small>.${cents}</small></div>
+    <div class="hero-sub">of ${money(s.goal)} · ${money(c.remaining)} to go</div>
+    <div class="hero-bar" role="img" aria-label="${pct(c.progress)} of goal"><i style="width:${c.progress * 100}%"></i></div>
+    <div class="hero-meta">
+      <div><b>${pct(c.progress, c.progress > 0 && c.progress < .1 ? 1 : 0)}</b><span>complete</span></div>
+      <div><b>${c.daysLeft}</b><span>days left</span></div>
+      <div><b>${c.perPayday != null ? money0(c.perPayday) : "—"}</b><span>per payday</span></div>
+    </div>
+  </section>
+  ${next ? `<section class="card">
+    <div class="card-h"><h2>Next pay</h2><span class="pill ${c.s.payConfirmed ? "neutral" : "info"}">${c.s.payConfirmed ? "Expected" : "Assumed"}</span></div>
+    <div class="nextpay"><div class="dateblock"><span>${DOW[nd.getUTCDay()]}</span><b>${nd.getUTCDate()}</b><span>${nd.toLocaleDateString("en-NZ", { timeZone: "UTC", month: "short" })}</span></div>
+      <div><div class="xs muted">Put away</div><div class="amt-l">${money(nextSave)}</div><div class="xs muted">${isFinite(c.neededPct) ? pct(Math.min(1, c.neededPct)) : "100%"} of about ${money(next.net)} take-home · ${next.workDays} workday${next.workDays === 1 ? "" : "s"}</div></div></div>
+    <button class="btn primary block" data-act="add-pay" data-date="${next.date}">${I.plus} Record this pay</button>
+    ${c.overdue.length ? `<div class="note warn"><b>${c.overdue.length} expected pay${c.overdue.length > 1 ? "s" : ""} not recorded</b><span>${c.overdue.map(p => fmtDate(p.date)).join(", ")}. Record it once the money is in your account.</span></div>` : ""}
+  </section>` : `<section class="card"><div class="empty"><b>No more paydays before ${fmtDate(s.deadline)}</b><span>Check your pay schedule in Settings.</span></div></section>`}
+  <section class="qa" aria-label="Quick actions">
+    <button class="btn primary" data-act="add-pay">${I.pay}Add Paycheck</button>
+    <button class="btn" data-act="add-txn" data-type="deposit">${I.piggy}Add Savings</button>
+    <button class="btn" data-act="add-exp">${I.cart}Add Expense</button>
+    <button class="btn" data-nav="save">${I.save}View Progress</button>
+    <button class="btn" data-act="edit-goal">${I.flag}Update Goal</button>
+    <button class="btn" data-act="export">${I.out}Export Data</button>
+  </section>
+  <div class="grid4">
+    <div class="tile"><span class="label">Per week</span><b>${money(c.perWeek)}</b><span class="xs">to stay on track</span></div>
+    <div class="tile"><span class="label">By ${fmtDate(s.deadline)}</span><b>${money(c.projected)}</b><span class="xs">${c.projected >= s.goal ? "meets your goal" : money(s.goal - c.projected) + " short"}</span></div>
+    <div class="tile"><span class="label">Target today</span><b>${money(c.targetNow)}</b><span class="xs">${c.ahead >= -1 ? "you're on schedule" : money(-c.ahead) + " behind"}</span></div>
+    <div class="tile"><span class="label">Paydays left</span><b>${c.future.length}</b><span class="xs">before ${fmtDate(s.deadline)}</span></div>
+  </div>
+  ${c.balance < s.goal || pendingPcs.length ? `<section class="card">
+    <div class="card-h"><h2>On track?</h2></div>
+    ${gap}
+    ${pendingPcs.length ? `<div class="list">${pendingPcs.map(p => `<div class="row"><div class="main"><div class="t">${money(p.savedPlanned)} from pay on ${fmtDate(p.payDate)}</div><div class="xs muted">Not moved to savings yet. It isn't counted until you confirm.</div></div><button class="btn sm primary" data-act="transfer" data-id="${p.id}">Mark moved</button></div>`).join("")}</div>` : ""}
+  </section>` : ""}
+  ${scheduleNote(c)}
+  <section class="card">
+    <div class="card-h"><h2>Balance vs target</h2><div class="legend"><span><i style="background:var(--accent)"></i>Saved</span><span><i style="background:var(--muted)"></i>Target</span><span><i style="background:var(--accent-2)"></i>Projected</span></div></div>
+    <div class="chartbox"><canvas id="ch-balance-mini" aria-label="Savings balance over time compared with target"></canvas></div>
+  </section>
+  <section class="card">
+    <div class="card-h"><h2>Recent activity</h2><button class="btn ghost sm" data-nav="txn">See all</button></div>
+    ${recent.length ? `<div class="list">${recent.map(t => txRow(t, true)).join("")}</div>` : emptyStart()}
+  </section>`;
+}
+function addSheet() {
+  openModal("Add", `<div class="addlist">
+    <button type="button" data-act="add-pay">${I.pay}<div><b>Paycheck</b><span>Record pay that reached your account</span></div></button>
+    <button type="button" data-act="add-txn" data-type="deposit">${I.piggy}<div><b>Savings deposit</b><span>Money moved into savings</span></div></button>
+    <button type="button" data-act="add-exp">${I.cart}<div><b>Expense</b><span>Something you spent</span></div></button>
+    <button type="button" data-act="add-txn" data-type="withdrawal">${I.out}<div><b>Withdrawal</b><span>Money taken out of savings</span></div></button>
+  </div>`, { cancel: "Close" });
+}
+function emptyStart() {
+  return `<div class="empty"><b>Nothing recorded yet</b><span>Your first shift is ${fmtLong(state.settings.startDate)}. When your first pay lands, record it here and move your savings across.</span><div class="actions" style="justify-content:center"><button class="btn primary" data-act="add-pay">Add Paycheck</button>${!hasRealData() && !hasSample() ? `<button class="btn" data-act="load-sample">Try with sample data</button>` : ""}</div></div>`;
+}
+const TX_META = { deposit: ["dep", "+", "Deposit"], withdrawal: ["wd", "−", "Withdrawal"], interest: ["int", "%", "Interest"], adjustment: ["adj", "±", "Adjustment"] };
+function txRow(t, compact = false) {
+  const [cls, sym, lab] = TX_META[t.type] || TX_META.deposit;
+  const amt = signedAmt(t);
+  const pc = t.paycheckId ? state.paychecks.find(p => p.id === t.paycheckId) : null;
+  return `<div class="row"><div class="dot ${cls}" aria-hidden="true">${sym}</div><div class="main"><div class="t">${esc(t.description || lab)}${t.sample ? ' <span class="pill gold xs">sample</span>' : ""}</div><div class="xs muted">${lab} · ${fmtLong(t.date)}${pc ? " · from pay on " + fmtDate(pc.payDate) : ""}${t.notes ? " · " + esc(t.notes) : ""}</div></div><div class="amt ${amt >= 0 ? "pos" : "neg"}">${amt >= 0 ? "+" : "−"}${money(Math.abs(amt))}</div>${compact ? "" : `<div class="ops"><button class="iconbtn" title="Edit" aria-label="Edit transaction" data-act="edit-txn" data-id="${t.id}">${I.edit}</button><button class="iconbtn" title="Delete" aria-label="Delete transaction" data-act="del-txn" data-id="${t.id}">${I.del}</button></div>`}</div>`;
+}
+
+function viewPay(c) {
+  const pcs = [...c.pcs].reverse();
+  const upcoming = c.future.slice(0, 6);
+  return `${sampleBanner()}
+  <div class="card-h"><h2 class="page-title">Paychecks</h2><button class="btn primary" data-act="add-pay">${I.plus} Add Paycheck</button></div>
+  <div class="grid4">
+    <div class="tile"><span class="label">Pays recorded</span><b>${pcs.length}</b><span class="xs">${sum(pcs, p => p.hours).toFixed(1)} hours</span></div>
+    <div class="tile"><span class="label">Gross earned</span><b>${money(sum(pcs, p => p.gross))}</b><span class="xs">before deductions</span></div>
+    <div class="tile"><span class="label">Take-home</span><b>${money(sum(pcs, p => p.net))}</b><span class="xs">actually received</span></div>
+    <div class="tile"><span class="label">Student loan paid</span><b>${money(sum(pcs, p => p.sl))}</b><span class="xs">via PAYE</span></div>
+  </div>
+  <section class="card">
+    <h2>Recorded pay</h2>
+    ${pcs.length ? pcs.map(pcCard).join("") : `<div class="empty"><b>No paychecks yet</b><span>Add each pay when it actually reaches your bank account, using the figures on your payslip. Scheduled paydays are never counted on their own.</span><button class="btn primary" data-act="add-pay">Add Paycheck</button></div>`}
+  </section>
+  <section class="card">
+    <div class="card-h"><h2>Expected paydays</h2><span class="pill ${c.s.payConfirmed ? "neutral" : "info"}">${c.s.payConfirmed ? "From your schedule" : "Assumed schedule"}</span></div>
+    <p class="small muted">Estimates only. Nothing here counts as income until you record it.</p>
+    ${upcoming.length ? `<div class="list">${upcoming.map(p => `<div class="row"><div class="main"><div class="t">${fmtLong(p.date)}${p.date < c.today ? ' <span class="pill warn">not recorded</span>' : ""}</div><div class="xs muted">${fmtDate(p.periodStart)}–${fmtDate(p.periodEnd)} · ${p.workDays} workday${p.workDays === 1 ? "" : "s"} · ${p.hours.toFixed(1)} h · gross ${money(p.gross)}</div></div><div class="amt">≈ ${money(p.net)}</div><button class="btn sm" data-act="add-pay" data-date="${p.date}">Record</button></div>`).join("")}</div>` : `<div class="empty"><span>No expected paydays left before your deadline.</span></div>`}
+    ${scheduleNote(c)}
+  </section>`;
+}
+function pcCard(p) {
+  const dep = p.depositId ? state.txns.find(t => t.id === p.depositId) : null;
+  const ded = p.paye + p.sl + p.ks + p.other;
+  const sv = p.net > 0 ? p.savedPlanned / p.net : 0;
+  return `<article class="pc">
+    <div class="pc-top"><div><div class="t" style="font-weight:700">Paid ${fmtLong(p.payDate)}${p.sample ? ' <span class="pill gold xs">sample</span>' : ""}</div><div class="xs muted">${isDate(p.periodStart) ? fmtDate(p.periodStart) + "–" + fmtDate(p.periodEnd) + " · " : ""}${(+p.hours).toFixed(2)} h × ${money(p.rate)}</div></div>
+    <div style="text-align:right"><div class="amt" style="font-size:1.25rem">${money(p.net)}</div><div class="xs muted">take-home</div></div></div>
+    <div class="split" aria-hidden="true"><i style="width:${sv * 100}%;background:var(--accent)"></i><i style="width:${(1 - sv) * 100}%;background:var(--c-tax)"></i></div>
+    <div class="pc-break">
+      <div><span>Gross</span><span>${money(p.gross)}</span></div>
+      <div><span>PAYE + ACC</span><span>${money(p.paye)}</span></div>
+      <div><span>Student loan</span><span>${money(p.sl)}</span></div>
+      <div><span>KiwiSaver</span><span>${money(p.ks)}</span></div>
+      <div><span>Other</span><span>${money(p.other)}</span></div>
+      <div><span>To savings</span><span>${money(p.savedPlanned)}</span></div>
+      <div><span>Spending</span><span>${money(p.spending)}</span></div>
+      <div><span>Deductions</span><span>${p.deductionsSource === "payslip" ? "from payslip" : "estimated"}</span></div>
+    </div>
+    ${Math.abs(p.gross - ded - p.net) > 1 ? `<p class="xs muted">Gross minus listed deductions is ${money(p.gross - ded)}; you received ${money(p.net)}. The app uses what you received.</p>` : ""}
+    ${p.notes ? `<p class="small">${esc(p.notes)}</p>` : ""}
+    <div class="actions" style="justify-content:space-between;align-items:center">
+      ${p.savedPlanned > 0 ? (dep ? `<span class="pill good">✓ ${money(dep.amount)} in savings ${fmtDate(dep.date)}</span>` : `<span class="pill warn">Transfer of ${money(p.savedPlanned)} pending</span>`) : `<span class="pill neutral">Nothing set aside</span>`}
+      <div class="actions">${p.savedPlanned > 0 && !dep ? `<button class="btn sm primary" data-act="transfer" data-id="${p.id}">Mark transferred</button>` : ""}<button class="btn sm" data-act="edit-pay" data-id="${p.id}">Edit</button><button class="btn sm danger" data-act="del-pay" data-id="${p.id}">Delete</button></div>
+    </div>
+  </article>`;
+}
+
+/* ---- Savings: calculator, calendar, milestones ---- */
+function calcInputs(c) {
+  if (!ui.calc) ui.calc = { goal: c.s.goal, deadline: c.s.deadline, startBal: r2(c.balance), rate: c.s.hourlyRate, hours: c.s.weeklyHours, custom: 75 };
+  return ui.calc;
+}
+function calcResults(c) {
+  const k = calcInputs(c);
+  const cc = compute(state, { goal: +k.goal, deadline: k.deadline, hourlyRate: +k.rate, weeklyHours: +k.hours }, +k.startBal);
+  const scen = [["A", 100], ["B", 90], ["C", 80], ["D", Math.min(100, Math.max(0, +k.custom || 0))]].map(([id, p]) => {
+    const proj = cc.balance + cc.pending + cc.futureNet * p / 100;
+    return { id, p, proj, diff: proj - cc.s.goal };
+  });
+  return { k, cc, scen };
+}
+function viewSave(c) {
+  const seg = `<div class="seg" role="group" aria-label="Savings sections">${[["calc", "Calculator"], ["cal", "Weekly calendar"], ["ms", "Milestones"]].map(([k, l]) => `<button data-savetab="${k}" aria-pressed="${ui.saveTab === k}">${l}</button>`).join("")}</div>`;
+  let body = "";
+  if (ui.saveTab === "calc") body = viewCalc(c);
+  else if (ui.saveTab === "cal") body = viewCalendar(c);
+  else body = viewMilestones(c);
+  return `${sampleBanner()}<div class="card-h"><h2 class="page-title">Savings plan</h2>${seg}</div>${body}`;
+}
+function viewCalc(c) {
+  const { k, cc, scen } = calcResults(c);
+  const enough = cc.maxPossible >= cc.s.goal - 0.005;
+  const fullPay = cc.futureNet;
+  return `
+  <section class="card">
+    <div class="card-h"><h2>Calculator inputs</h2><div class="actions"><button class="btn sm" data-act="calc-reset">Reset to my settings</button><button class="btn sm" data-act="calc-apply">Save as my settings</button></div></div>
+    <form class="fgrid" id="calcform" onsubmit="return false">
+      ${fld("calc-goal", "Savings target", "number", k.goal, { money: 1, min: 1, step: "0.01" })}
+      ${fld("calc-deadline", "Deadline", "date", k.deadline)}
+      ${fld("calc-startBal", "Starting balance", "number", k.startBal, { money: 1, min: 0, step: "0.01", hint: "Defaults to what you've saved so far" })}
+      ${fld("calc-rate", "Hourly wage", "number", k.rate, { money: 1, min: 0, step: "0.01" })}
+      ${fld("calc-hours", "Hours per week", "number", k.hours, { min: 0, max: 100, step: "0.25" })}
+      ${fld("calc-custom", "Scenario D: your %", "number", k.custom, { min: 0, max: 100, step: "1" })}
+    </form>
+    <p class="xs muted">Uses your ${cc.s.payConfirmed ? "" : "assumed "}pay schedule: ${cc.future.length} payday${cc.future.length === 1 ? "" : "s"} still to come by ${fmtDate(cc.s.deadline)}, including partial first periods. ${state.settings.estimateMode === "manual" ? "Take-home is scaled from your $" + state.settings.manualWeeklyNet + " weekly estimate; switch to calculated deductions in Settings for exact PAYE on a new wage." : "Take-home uses the itemised PAYE calculation."}</p>
+  </section>
+  <div class="grid4">
+    <div class="tile"><span class="label">Need per week</span><b>${money(cc.perWeek)}</b><span class="xs">${cc.weeksLeft.toFixed(1)} weeks left</span></div>
+    <div class="tile"><span class="label">Need per payday</span><b>${cc.perPayday != null ? money(cc.perPayday) : "—"}</b><span class="xs">${isFinite(cc.neededPct) ? pct(cc.neededPct) + " of take-home" : "no paydays left"}</span></div>
+    <div class="tile"><span class="label">Saving every cent</span><b>${money(cc.maxPossible)}</b><span class="xs">${money(fullPay)} more pay expected</span></div>
+    <div class="tile"><span class="label">${enough ? "Wages are enough" : "Extra needed"}</span><b style="color:${enough ? "var(--accent)" : "var(--bad)"}">${enough ? "Yes" : money(cc.s.goal - cc.maxPossible)}</b><span class="xs">${enough ? "with " + money(cc.maxPossible - cc.s.goal) + " to spare at 100%" : "beyond saving 100% of wages"}</span></div>
+  </div>
+  <section class="card">
+    <div class="card-h"><h2>Scenarios at ${fmtLong(cc.s.deadline)}</h2></div>
+    <div class="tablewrap"><table><thead><tr><th>Scenario</th><th class="n">Save</th><th class="n">Per payday</th><th class="n">Projected</th><th class="n">vs goal</th></tr></thead><tbody>
+    ${scen.map(x => `<tr${x.diff >= 0 ? ' class="best"' : ""}><td><b>${x.id}</b> · ${x.id === "D" ? "Your choice" : "Save " + x.p + "%"}</td><td class="n">${x.p}%</td><td class="n">${cc.future.length ? money(cc.futureNet * x.p / 100 / cc.future.length) : "—"}</td><td class="n"><b>${money(x.proj)}</b></td><td class="n" style="color:${x.diff >= 0 ? "var(--accent)" : "var(--bad)"}">${x.diff >= 0 ? "+" : "−"}${money(Math.abs(x.diff))}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="chartbox"><canvas id="ch-scen" aria-label="Projected balance for each scenario"></canvas></div>
+  </section>`;
+}
+function viewCalendar(c) {
+  const wks = weeksModel(c);
+  const behind = -c.ahead;
+  const ST = { upcoming: ["neutral", "Upcoming"], awaiting: ["info", "Awaiting pay"], paid: ["warn", "Paid · transfer pending"], saved: ["good", "Saved"], missed: ["bad", "Missed target"], nopay: ["neutral", "No payday"] };
+  return `
+  ${c.started && behind > 1 && c.future.length ? `<div class="note bad"><b>${money(behind)} behind the target schedule</b><span>To catch up, save about ${money(c.needFromFuture / c.future.length)} on each of your ${c.future.length} remaining paydays (${isFinite(c.neededPct) ? pct(c.neededPct) : "—"} of take-home).</span></div>` : ""}
+  ${scheduleNote(c)}
+  <p class="small muted">Work weeks run Sunday to Saturday. Green days are scheduled shifts, the gold underline marks an expected payday, and a dashed outline marks a public holiday (paid if it falls on a normal workday). Pay figures are estimates, not confirmed income.</p>
+  ${wks.map(w => {
+    const [cls, lab] = ST[w.status];
+    const pay = w.pays[0];
+    const pcNoDep = w.pcsHere.find(p => p.savedPlanned > 0 && (!p.depositId || !c.depById[p.depositId]));
+    const dueUnrec = w.pays.find(p => !p.paycheck);
+    return `<article class="wk ${w.status === "missed" ? "missed" : ""} ${w.current ? "current" : ""}">
+      <div class="wk-h"><div><b>Week of ${fmtDate(w.ws)}</b> <span class="muted small">${fmtDate(w.ws)} – ${fmtDate(w.we)}</span>${w.current ? ' <span class="pill info">This week</span>' : ""}</div><span class="pill ${cls}">${lab}</span></div>
+      <div class="days">${w.days.map(d => `<div class="day ${d.work ? "work" : d.inRange ? "off" : "na"} ${d.holiday ? "hol" : ""} ${w.pays.some(p => p.date === d.date) ? "pay" : ""}" title="${d.holiday ? esc(d.holiday) : ""}">${DOW[dow(d.date)]}<b>${toD(d.date).getUTCDate()}</b></div>`).join("")}</div>
+      ${w.days.some(d => d.holiday) ? `<p class="xs muted">${w.days.filter(d => d.holiday).map(d => fmtDate(d.date) + ": " + esc(d.holiday)).join(" · ")}</p>` : ""}
+      <div class="wk-stats">
+        <div><span>Workdays</span><span>${w.nWork} · ${w.hours.toFixed(1)} h</span></div>
+        <div><span>Est. gross</span><span>${money(w.est.gross)}</span></div>
+        <div><span>Est. take-home</span><span>${money(w.est.net)}</span></div>
+        <div><span>Payday</span><span>${pay ? fmtDate(pay.date) + (c.s.payConfirmed ? "" : " (assumed)") : "none"}</span></div>
+        <div><span>Savings target</span><span>${money(w.target)}</span></div>
+        <div><span>Deposited</span><span style="color:${w.deposited > 0 ? "var(--accent)" : "inherit"}">${money(w.deposited)}</span></div>
+      </div>
+      ${w.status === "missed" ? `<p class="small" style="color:var(--bad)">Short by ${money(w.target - w.deposited)} this week.</p>` : ""}
+      ${(w.status === "upcoming" || w.status === "awaiting") && w.catchUp > 0 && Math.abs(w.catchUp - w.target) > 1 ? `<p class="small muted">Catch-up target: <b>${money(w.catchUp)}</b> to stay on course for ${money(c.s.goal)}.</p>` : ""}
+      ${dueUnrec || pcNoDep ? `<div class="actions">${dueUnrec ? `<button class="btn sm ${dueUnrec.date <= c.today ? "primary" : ""}" data-act="add-pay" data-date="${dueUnrec.date}">Mark pay received</button>` : ""}${pcNoDep ? `<button class="btn sm primary" data-act="transfer" data-id="${pcNoDep.id}">Mark transfer done</button>` : ""}</div>` : ""}
+    </article>`;
+  }).join("")}`;
+}
+function viewMilestones(c) {
+  const ms = milestoneList(c);
+  return `<section class="card"><h2>Milestones</h2>
+  <p class="small muted">Projected dates follow your actual savings rate (${pct(c.savingsRate)} of take-home) and the paydays still to come.</p>
+  <div class="ms">${ms.map(m => `<div class="ms-row"><div class="medal ${m.reached ? "on" : ""}">${m.amount >= 1000 ? (m.amount / 1000).toFixed(m.amount % 1000 ? 1 : 0) + "K" : money0(m.amount)}</div><div><b>${money(m.amount)}</b><div class="xs muted">${m.reached ? (m.reached === "start" ? "Reached at the start" : "Reached " + fmtLong(m.reached)) : m.projected ? (m.projected.now ? "Reached once your pending transfer lands" : "Projected " + fmtLong(m.projected.date)) : "Not reachable at your current rate"}</div></div><div>${m.reached ? '<span class="pill gold">Reached</span>' : `<span class="xs muted num">${money(m.amount - c.balance)} to go</span>`}</div></div>`).join("")}</div>
+  <div class="bar"><i style="width:${c.progress * 100}%"></i></div></section>`;
+}
+
+/* ---- Transactions & expenses ---- */
+function viewTxn(c) {
+  const seg = `<div class="seg" role="group" aria-label="Activity type">${[["savings", "Savings"], ["spending", "Spending"]].map(([k, l]) => `<button data-txtab="${k}" aria-pressed="${ui.txTab === k}">${l}</button>`).join("")}</div>`;
+  return `${sampleBanner()}<div class="card-h"><h2 class="page-title">Transactions</h2>${seg}</div>${ui.txTab === "savings" ? viewSavingsTx(c) : viewSpending(c)}`;
+}
+function viewSavingsTx(c) {
+  const t = c.txns;
+  const dep = sum(t.filter(x => x.type === "deposit"), x => x.amount), wd = sum(t.filter(x => x.type === "withdrawal"), x => x.amount);
+  const intr = sum(t.filter(x => x.type === "interest"), x => x.amount), adj = sum(t.filter(x => x.type === "adjustment"), x => x.amount);
+  return `<div class="grid4">
+    <div class="tile"><span class="label">Balance</span><b>${money(c.balance)}</b><span class="xs">incl. ${money(c.s.startBalance)} starting</span></div>
+    <div class="tile"><span class="label">Deposits</span><b>${money(dep)}</b><span class="xs">${t.filter(x => x.type === "deposit").length} transfers</span></div>
+    <div class="tile"><span class="label">Withdrawals</span><b>${money(wd)}</b><span class="xs">taken out</span></div>
+    <div class="tile"><span class="label">Interest &amp; adj.</span><b>${money(intr + adj)}</b><span class="xs">${money(intr)} interest</span></div>
+  </div>
+  <section class="card"><div class="card-h"><h2>Savings history</h2><div class="actions"><button class="btn primary" data-act="add-txn" data-type="deposit">${I.plus} Add Savings</button><button class="btn" data-act="add-txn" data-type="withdrawal">Withdraw</button></div></div>
+  ${t.length ? `<div class="list">${[...t].reverse().map(txRow).join("")}</div>` : `<div class="empty"><b>No savings movements yet</b><span>Deposits you confirm from a paycheck appear here automatically. You can also add interest, withdrawals or a balance adjustment.</span><button class="btn primary" data-act="add-txn" data-type="deposit">Add Savings</button></div>`}
+  </section>`;
+}
+function allCats() { return [...BUILTIN_CATS, ...state.settings.customCategories]; }
+function viewSpending(c) {
+  const ex = [...state.expenses].sort(byDate);
+  const wk = weekStart(c.today), mk = monthKey(c.today);
+  const weekTot = sum(ex.filter(e => e.date >= wk && e.date <= addDays(wk, 6)), e => e.amount);
+  const monthTot = sum(ex.filter(e => monthKey(e.date) === mk), e => e.amount);
+  const monthSpendMoney = sum(c.pcs.filter(p => monthKey(p.payDate) === mk), p => p.spending);
+  const byCat = {}; for (const e of ex.filter(e => monthKey(e.date) === mk)) byCat[e.category] = (byCat[e.category] || 0) + e.amount;
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  const maxCat = cats.length ? cats[0][1] : 1;
+  const s = c.s, alerts = [];
+  if (s.weeklyLimit > 0 && weekTot > s.weeklyLimit) alerts.push(`This week's spending (${money(weekTot)}) is over your ${money(s.weeklyLimit)} weekly limit.`);
+  if (s.monthlyLimit > 0 && monthTot > s.monthlyLimit) alerts.push(`This month's spending (${money(monthTot)}) is over your ${money(s.monthlyLimit)} monthly limit.`);
+  if (monthTot > monthSpendMoney + 0.005 && monthTot > 0) alerts.push(`You've spent ${money(monthTot - monthSpendMoney)} more this month than the ${money(monthSpendMoney)} you kept back from pay. That money comes out of what you could save.`);
+  const weeks = {}; for (const e of ex) { const k = weekStart(e.date); weeks[k] = (weeks[k] || 0) + e.amount; }
+  const months = {}; for (const e of ex) { const k = monthKey(e.date); months[k] = (months[k] || 0) + e.amount; }
+  return `<div class="grid3">
+    <div class="tile"><span class="label">This week</span><b>${money(weekTot)}</b><span class="xs">${s.weeklyLimit > 0 ? "limit " + money(s.weeklyLimit) : "no limit set"}</span></div>
+    <div class="tile"><span class="label">This month</span><b>${money(monthTot)}</b><span class="xs">${s.monthlyLimit > 0 ? "limit " + money(s.monthlyLimit) : "no limit set"}</span></div>
+    <div class="tile"><span class="label">Spending money kept</span><b>${money(monthSpendMoney)}</b><span class="xs">from this month's pay</span></div>
+  </div>
+  ${alerts.map(a => `<div class="note warn"><b>Spending alert</b><span>${a}</span></div>`).join("")}
+  <section class="card"><div class="card-h"><h2>Expenses</h2><div class="actions"><button class="btn sm" data-act="limits">Set limits</button><button class="btn primary" data-act="add-exp">${I.plus} Add Expense</button></div></div>
+  <p class="small muted">Optional. Your parents cover living costs right now, so this can stay empty. Expenses are paid from your spending money and don't change your savings balance. Record a savings withdrawal if you dip into savings.</p>
+  ${cats.length ? `<div class="grid2"><div><div class="label" style="margin-bottom:8px">By category this month</div>${cats.map(([k, v]) => `<div style="display:grid;gap:4px;margin-bottom:8px"><div class="kv" style="padding:0;border:0"><span>${esc(k)}</span><span>${money(v)}</span></div><div class="bar" style="height:6px"><i style="width:${v / maxCat * 100}%;background:var(--c-sl)"></i></div></div>`).join("")}</div>
+  <div><div class="label" style="margin-bottom:8px">Totals</div>${Object.entries(months).sort().reverse().map(([k, v]) => `<div class="kv"><span class="muted">${toD(k + "-01").toLocaleDateString("en-NZ", { timeZone: "UTC", month: "long", year: "numeric" })}</span><span>${money(v)}</span></div>`).join("")}${Object.entries(weeks).sort().reverse().slice(0, 6).map(([k, v]) => `<div class="kv"><span class="muted">Week of ${fmtDate(k)}</span><span>${money(v)}</span></div>`).join("")}</div></div>` : ""}
+  ${ex.length ? `<div class="list">${[...ex].reverse().map(e => `<div class="row"><div class="dot wd" aria-hidden="true">${esc(e.category.slice(0, 1))}</div><div class="main"><div class="t">${esc(e.description || e.category)}${e.sample ? ' <span class="pill gold xs">sample</span>' : ""}</div><div class="xs muted">${esc(e.category)} · ${fmtLong(e.date)}${e.notes ? " · " + esc(e.notes) : ""}</div></div><div class="amt neg">−${money(e.amount)}</div><div class="ops"><button class="iconbtn" aria-label="Edit expense" data-act="edit-exp" data-id="${e.id}">${I.edit}</button><button class="iconbtn" aria-label="Delete expense" data-act="del-exp" data-id="${e.id}">${I.del}</button></div></div>`).join("")}</div>` : `<div class="empty"><b>No expenses</b><span>Nothing to track yet, and that's fine.</span></div>`}
+  </section>`;
+}
+
+/* ---- Analytics ---- */
+function groupKey(d) { return ui.group === "weekly" ? weekStart(d) : ui.group === "monthly" ? monthKey(d) : "all"; }
+function groupLabel(k) { return k === "all" ? "All time" : k.length === 7 ? toD(k + "-01").toLocaleDateString("en-NZ", { timeZone: "UTC", month: "short", year: "numeric" }) : "Wk " + fmtDate(k); }
+function grouped(c) {
+  const g = {};
+  const get = k => g[k] || (g[k] = { gross: 0, net: 0, paye: 0, sl: 0, ks: 0, other: 0, saved: 0, dep: 0, wd: 0 });
+  for (const p of c.pcs) { const o = get(groupKey(p.payDate)); o.gross += p.gross; o.net += p.net; o.paye += p.paye; o.sl += p.sl; o.ks += p.ks; o.other += p.other; o.saved += p.savedPlanned; }
+  for (const t of c.txns) { const o = get(groupKey(t.date)); if (t.type === "withdrawal") o.wd += t.amount; else if (t.type === "deposit") o.dep += t.amount; }
+  const keys = Object.keys(g).sort();
+  return { keys, g, labels: keys.map(groupLabel) };
+}
+function viewStats(c) {
+  const seg = `<div class="seg" role="group" aria-label="Group by">${[["weekly", "Weekly"], ["monthly", "Monthly"], ["all", "All time"]].map(([k, l]) => `<button data-group="${k}" aria-pressed="${ui.group === k}">${l}</button>`).join("")}</div>`;
+  const has = c.pcs.length > 0, hasT = c.txns.length > 0;
+  const netTot = sum(c.pcs, p => p.net);
+  const noData = msg => `<div class="empty"><b>No data yet</b><span>${msg}</span></div>`;
+  return `${sampleBanner()}<div class="card-h"><h2 class="page-title">Analytics</h2>${seg}</div>
+  <div class="grid4">
+    <div class="tile"><span class="label">Student loan</span><b>${money(sum(c.pcs, p => p.sl))}</b><span class="xs">deducted so far</span></div>
+    <div class="tile"><span class="label">Deposits / withdrawals</span><b>${money(sum(c.txns.filter(t => t.type === "deposit"), t => t.amount))}</b><span class="xs">${money(sum(c.txns.filter(t => t.type === "withdrawal"), t => t.amount))} withdrawn</span></div>
+    <div class="tile"><span class="label">Saved of income</span><b>${netTot > 0 ? pct(sum(c.pcs, p => p.savedPlanned) / netTot) : "—"}</b><span class="xs">of take-home pay</span></div>
+    <div class="tile"><span class="label">Projected ${fmtDate(c.s.deadline)}</span><b>${money(c.projected)}</b><span class="xs">${pct(c.s.goal ? c.projected / c.s.goal : 0)} of goal</span></div>
+  </div>
+  <section class="card"><div class="card-h"><h2>Savings balance over time</h2><div class="legend"><span><i style="background:var(--accent)"></i>Actual</span><span><i style="background:var(--muted)"></i>Target</span><span><i style="background:var(--accent-2)"></i>Projected</span></div></div><div class="chartbox tall"><canvas id="ch-balance"></canvas></div></section>
+  <div class="grid2">
+    <section class="card"><h2>Income vs deductions</h2>${has ? `<div class="chartbox"><canvas id="ch-income"></canvas></div>` : noData("Record a paycheck to see where your gross pay goes.")}</section>
+    <section class="card"><h2>Gross vs take-home</h2>${has ? `<div class="chartbox"><canvas id="ch-gross"></canvas></div>` : noData("Appears after your first paycheck.")}</section>
+    <section class="card"><h2>Deposits and withdrawals</h2>${hasT ? `<div class="chartbox"><canvas id="ch-flow"></canvas></div>` : noData("Appears after your first savings deposit.")}</section>
+    <section class="card"><h2>Share of income saved</h2>${has ? `<div class="chartbox"><canvas id="ch-rate"></canvas></div>` : noData("Appears after your first paycheck.")}</section>
+  </div>`;
+}
+
+/* ---- Settings ---- */
+function fld(id, label, type, value, o = {}) {
+  const attrs = ["min", "max", "step"].filter(k => o[k] != null).map(k => `${k}="${o[k]}"`).join(" ");
+  const ds = o.set ? `data-set="${o.set}"` : "";
+  const input = type === "select"
+    ? `<select id="${id}" ${ds}>${o.options.map(([v, l]) => `<option value="${esc(v)}" ${String(v) === String(value) ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`
+    : type === "textarea" ? `<textarea id="${id}" ${ds}>${esc(value)}</textarea>`
+      : `<input id="${id}" type="${type}" ${type === "number" ? 'inputmode="decimal"' : ""} value="${esc(value ?? "")}" ${attrs} ${ds} ${o.required ? "required" : ""} ${o.placeholder ? `placeholder="${esc(o.placeholder)}"` : ""}>`;
+  return `<div class="field ${o.full ? "full" : ""}" data-for="${id}"><label for="${id}">${label}</label>${o.money ? `<div class="money-in">${input}</div>` : input}${o.hint ? `<span class="hint">${o.hint}</span>` : ""}<span class="errmsg" hidden></span></div>`;
+}
+function viewSettings(c) {
+  const s = state.settings;
+  const calcWeek = estimate({ ...s, estimateMode: "calc" }, s.weeklyHours, 7);
+  return `<div class="card-h"><h2 class="page-title">Settings</h2><span class="xs muted">Changes save automatically</span></div>
+  <section class="card"><h2>Goal</h2><div class="fgrid">
+    ${fld("s-goal", "Savings target", "number", s.goal, { money: 1, min: 1, step: "0.01", set: "goal" })}
+    ${fld("s-deadline", "Deadline", "date", s.deadline, { set: "deadline" })}
+    ${fld("s-startBalance", "Starting savings balance", "number", s.startBalance, { money: 1, min: 0, step: "0.01", set: "startBalance", hint: "Money already in savings before you started tracking" })}
+    ${fld("s-defaultSavePct", "Default % of pay to save", "number", s.defaultSavePct, { min: 0, max: 100, step: "1", set: "defaultSavePct", hint: "Used for projections until you record real pay" })}
+  </div></section>
+  <section class="card"><h2>Job</h2><div class="fgrid">
+    ${fld("s-startDate", "Employment start date", "date", s.startDate, { set: "startDate" })}
+    ${fld("s-hourlyRate", "Hourly wage", "number", s.hourlyRate, { money: 1, min: 0, step: "0.01", set: "hourlyRate" })}
+    ${fld("s-weeklyHours", "Hours per full week", "number", s.weeklyHours, { min: 0, max: 100, step: "0.25", set: "weeklyHours", hint: `${hoursPerDay(s).toFixed(2)} h per workday` })}
+    <div class="field full"><span class="lab">Workdays</span><div class="days-pick">${DOW.map((d, i) => `<label><input type="checkbox" data-workday="${i}" ${s.workDays.includes(i) ? "checked" : ""}>${d}</label>`).join("")}</div><span class="hint">Full week gross: ${money(s.weeklyHours * s.hourlyRate)}</span></div>
+  </div></section>
+  <section class="card" id="pay-settings"><div class="card-h"><h2>Payday</h2><span class="pill ${s.payConfirmed ? "good" : "info"}">${s.payConfirmed ? "Confirmed" : "Not confirmed"}</span></div>
+    <p class="small muted">Your first payday is usually not your first day of work. Most NZ employers pay a week or more in arrears, so the first pay often covers a partial week.</p>
+    <div class="fgrid">
+    ${fld("s-payFrequency", "Pay frequency", "select", s.payFrequency, { set: "payFrequency", options: [[7, "Weekly"], [14, "Fortnightly"], [28, "Four-weekly"]] })}
+    ${fld("s-firstPayday", "First payday", "date", s.firstPayday, { set: "firstPayday" })}
+    ${fld("s-periodEndLag", "Pay period ends … days before payday", "number", s.periodEndLag, { min: 0, max: 60, step: "1", set: "periodEndLag", hint: `First pay covers ${fmtDate(addDays(addDays(s.firstPayday, -s.periodEndLag), -(s.payFrequency - 1)))}–${fmtDate(addDays(s.firstPayday, -s.periodEndLag))}` })}
+    <div class="field"><span class="lab">Status</span><label class="check"><input type="checkbox" data-setbool="payConfirmed" ${s.payConfirmed ? "checked" : ""}> My employer has confirmed this schedule</label></div>
+  </div></section>
+  <section class="card"><h2>Tax and deductions</h2>
+    <div class="fgrid">
+    ${fld("s-taxCode", "Tax code", "text", s.taxCode, { set: "taxCode" })}
+    ${fld("s-estimateMode", "Take-home estimate", "select", s.estimateMode, { set: "estimateMode", options: [["manual", "My weekly figure"], ["calc", "Calculate from rates below"]] })}
+    ${fld("s-manualWeeklyNet", "My estimated weekly take-home", "number", s.manualWeeklyNet, { money: 1, min: 0, step: "0.01", set: "manualWeeklyNet", hint: `The rates below give ${money(calcWeek.net + calcWeek.ks + calcWeek.other)} before KiwiSaver` })}
+    ${fld("s-kiwiSaverRate", "KiwiSaver employee rate", "select", s.kiwiSaverRate, { set: "kiwiSaverRate", options: [[0, "Not in KiwiSaver / on a savings suspension"], [3, "3%"], [4, "4%"], [6, "6%"], [8, "8%"], [10, "10%"]] })}
+    ${fld("s-otherWeekly", "Other deductions per week", "number", s.otherWeekly, { money: 1, min: 0, step: "0.01", set: "otherWeekly" })}
+    ${fld("s-accRate", "ACC earners' levy %", "number", s.accRate, { min: 0, max: 10, step: "0.01", set: "accRate", hint: "1.75% for 2026/27, incl. GST" })}
+    ${fld("s-accCap", "ACC max liable earnings", "number", s.accCap, { money: 1, min: 0, step: "1", set: "accCap" })}
+    <div class="field"><span class="lab">Student loan</span><label class="check"><input type="checkbox" data-setbool="studentLoan" ${s.studentLoan ? "checked" : ""}> Deduct student loan repayments (SL)</label></div>
+    ${fld("s-slThreshold", "Student loan threshold (yearly)", "number", s.slThreshold, { money: 1, min: 0, step: "1", set: "slThreshold", hint: `${money(s.slThreshold / 52)} per week` })}
+    ${fld("s-slRate", "Student loan rate %", "number", s.slRate, { min: 0, max: 50, step: "0.5", set: "slRate" })}
+    </div>
+    <div><div class="label" style="margin-bottom:6px">PAYE income tax brackets</div><div class="tablewrap"><table style="min-width:340px"><thead><tr><th>Income up to</th><th class="n">Rate %</th></tr></thead><tbody>${s.brackets.map((b, i) => `<tr><td><input aria-label="Bracket ${i + 1} upper limit" class="inline-in" style="width:140px" type="number" inputmode="decimal" data-bracket="${i}:upTo" value="${b.upTo ?? ""}" placeholder="and over"></td><td class="n"><input aria-label="Bracket ${i + 1} rate" class="inline-in" style="width:80px;text-align:right" type="number" step="0.1" data-bracket="${i}:rate" value="${b.rate}"></td></tr>`).join("")}</tbody></table></div></div>
+    <div class="summary-box">
+      <div class="label">Calculated full week (${s.weeklyHours} h)</div>
+      <div class="kv"><span class="muted">Gross</span><span>${money(calcWeek.gross)}</span></div>
+      <div class="kv"><span class="muted">PAYE</span><span>−${money(calcWeek.paye)}</span></div>
+      <div class="kv"><span class="muted">ACC levy</span><span>−${money(calcWeek.acc)}</span></div>
+      <div class="kv"><span class="muted">Student loan</span><span>−${money(calcWeek.sl)}</span></div>
+      ${calcWeek.ks ? `<div class="kv"><span class="muted">KiwiSaver</span><span>−${money(calcWeek.ks)}</span></div>` : ""}
+      ${calcWeek.other ? `<div class="kv"><span class="muted">Other</span><span>−${money(calcWeek.other)}</span></div>` : ""}
+      <div class="kv"><span><b>Take-home</b></span><span><b>${money(calcWeek.net)}</b></span></div>
+    </div>
+    <p class="xs muted">Defaults are the 2026/27 rates (1 April 2026 – 31 March 2027): tax brackets 10.5% / 17.5% / 30% / 33% / 39%, ACC 1.75%, student loan 12% over $24,128. Payroll software rounds slightly differently, so check against your first payslip. Rates change each April. Update them here if Inland Revenue announces new ones. Your payslip figures always win over these estimates.</p>
+  </section>
+  <section class="card"><h2>Spending</h2><div class="fgrid">
+    ${fld("s-weeklyLimit", "Weekly spending limit", "number", s.weeklyLimit, { money: 1, min: 0, step: "0.01", set: "weeklyLimit", hint: "0 = no limit" })}
+    ${fld("s-monthlyLimit", "Monthly spending limit", "number", s.monthlyLimit, { money: 1, min: 0, step: "0.01", set: "monthlyLimit", hint: "0 = no limit" })}
+    <div class="field full"><span class="lab">Custom categories</span><div class="chips">${s.customCategories.map((k, i) => `<span class="chip">${esc(k)}<button aria-label="Remove ${esc(k)}" data-act="rm-cat" data-i="${i}">×</button></span>`).join("") || '<span class="xs muted">None yet</span>'}</div>
+    <div style="display:flex;gap:8px"><input id="newcat" placeholder="e.g. Gym" class="inline-in" style="flex:1;min-width:0;font-size:16px;background:var(--surface-2)"><button class="btn" data-act="add-cat">Add</button></div></div>
+  </div></section>
+  <section class="card"><h2>Your data</h2>
+    <div class="note info"><b>${store.status === "synced" ? "Saved to your Claude account" : "Saved in this browser"}</b><span>${store.status === "synced" ? "Your tracker is stored privately under your Claude account, so it opens with your data on any device where you're signed in. A copy is also kept in this browser." : "Your data is stored only in this browser on this device. It won't sync to other devices. Export a backup regularly."} Nothing here is connected to your bank or employer. Every amount is something you entered.</span></div>
+    <div class="actions">
+      <button class="btn" data-act="csv" data-kind="txns">Savings CSV</button>
+      <button class="btn" data-act="csv" data-kind="paychecks">Paychecks CSV</button>
+      <button class="btn" data-act="csv" data-kind="expenses">Expenses CSV</button>
+      <button class="btn primary" data-act="json">Export JSON backup</button>
+      <button class="btn" data-act="import">Import backup</button>
+      <button class="btn danger" data-act="clear">Clear all data</button>
+    </div>
+    ${!hasRealData() && !hasSample() ? `<div><button class="btn sm" data-act="load-sample">Load sample data to explore</button></div>` : ""}
+  </section>`;
+}
+
+/* ---------------- charts ---------------- */
+const charts = {};
+function destroyCharts() { for (const k in charts) { try { charts[k].destroy(); } catch (e) { } delete charts[k]; } }
+function tok(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function baseOpts(extra = {}) {
+  const ink = tok("--muted"), grid = tok("--line");
+  return {
+    responsive: true, maintainAspectRatio: false, animation: matchMedia("(prefers-reduced-motion: reduce)").matches ? false : { duration: 500 },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => (ctx.dataset.label ? ctx.dataset.label + ": " : "") + money(ctx.parsed.y ?? ctx.parsed.x) } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: ink, font: { family: "Plus Jakarta Sans", size: 11 } }, border: { color: grid } },
+      y: { grid: { color: grid }, border: { display: false }, ticks: { color: ink, font: { family: "Plus Jakarta Sans", size: 11 }, callback: v => money0(v) }, beginAtZero: true }
+    }, ...extra
+  };
+}
+function balanceSeries(c) {
+  const s = c.s, ts = d => toD(d).getTime();
+  const startX = weekStart(s.startDate) < c.today ? s.startDate : s.startDate;
+  let bal = s.startBalance; const actual = [{ x: ts(addDays(startX, -1)), y: bal }];
+  for (const t of c.txns) { bal += signedAmt(t); actual.push({ x: ts(t.date), y: r2(bal) }); }
+  const endActual = c.txns.length && c.txns[c.txns.length - 1].date > c.today ? c.txns[c.txns.length - 1].date : c.today;
+  if (endActual >= startX) actual.push({ x: ts(endActual), y: r2(bal) });
+  const target = [{ x: ts(addDays(s.startDate, -1)), y: s.startBalance }];
+  let tb = s.startBalance;
+  for (const p of c.schedTo) { target.push({ x: ts(p.date), y: r2(tb) }); tb += p.targetShare; target.push({ x: ts(p.date), y: r2(tb) }); }
+  target.push({ x: ts(s.deadline), y: r2(c.schedTo.length ? tb : s.goal) });
+  let pb = c.balance + c.pending; const proj = [{ x: ts(endActual), y: r2(c.balance) }];
+  if (c.pending) proj.push({ x: ts(endActual), y: r2(pb) });
+  for (const p of c.future) { if (p.date < endActual) { pb += p.net * c.savingsRate; continue; } proj.push({ x: ts(p.date), y: r2(pb += p.net * c.savingsRate) }); }
+  proj.push({ x: ts(s.deadline), y: r2(pb) });
+  return { actual, target, proj, min: ts(addDays(s.startDate, -1)), max: ts(s.deadline) };
+}
+function drawBalance(id, c) {
+  const el = document.getElementById(id); if (!el || !window.Chart) return;
+  const d = balanceSeries(c);
+  const o = baseOpts();
+  o.scales.x = { type: "linear", min: d.min, max: d.max, grid: { display: false }, border: { color: tok("--line") }, ticks: { color: tok("--muted"), font: { family: "Plus Jakarta Sans", size: 11 }, maxTicksLimit: 6, callback: v => fmtDate(iso(new Date(v))) } };
+  o.plugins.tooltip.callbacks.title = items => items.length ? fmtLong(iso(new Date(items[0].parsed.x))) : "";
+  o.scales.y.suggestedMax = c.s.goal;
+  o.interaction = { mode: "nearest", intersect: false };
+  charts[id] = new Chart(el, {
+    type: "line", options: o,
+    data: {
+      datasets: [
+        { label: "Target", data: d.target, borderColor: tok("--muted"), borderDash: [5, 5], borderWidth: 1.5, pointRadius: 0, fill: false },
+        { label: "Projected", data: d.proj, borderColor: tok("--accent-2"), borderDash: [2, 4], borderWidth: 2, pointRadius: 0, fill: false },
+        { label: "Saved", data: d.actual, borderColor: tok("--accent"), backgroundColor: tok("--accent-soft"), borderWidth: 2.5, stepped: true, pointRadius: ctx => ctx.dataIndex === d.actual.length - 1 ? 4 : 0, pointBackgroundColor: tok("--accent"), fill: "origin" }
+      ]
+    }
+  });
+}
+function afterRender(c) {
+  if (!window.Chart) return;
+  if (ui.view === "dash") drawBalance("ch-balance-mini", c);
+  if (ui.view === "save" && ui.saveTab === "calc") {
+    const el = document.getElementById("ch-scen"); if (!el) return;
+    const { scen, cc } = calcResults(c);
+    const o = baseOpts({ indexAxis: "y" });
+    o.scales.x.suggestedMax = Math.max(cc.s.goal * 1.05, ...scen.map(x => x.proj));
+    o.scales.x.ticks.callback = v => money0(v); o.scales.x.grid = { color: tok("--line") }; o.scales.y.grid = { display: false }; o.scales.y.ticks.callback = undefined;
+    o.plugins.tooltip.callbacks.label = ctx => money(ctx.parsed.x);
+    charts["ch-scen"] = new Chart(el, {
+      type: "bar", options: o,
+      plugins: [{ id: "goalLine", afterDatasetsDraw(ch) { const x = ch.scales.x.getPixelForValue(cc.s.goal); const { top, bottom } = ch.chartArea; const g = ch.ctx; g.save(); g.strokeStyle = tok("--gold"); g.setLineDash([4, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(x, top); g.lineTo(x, bottom); g.stroke(); g.fillStyle = tok("--gold"); g.font = "700 11px Plus Jakarta Sans"; g.textAlign = x > ch.chartArea.right - 40 ? "right" : "left"; g.fillText("Goal", x + (g.textAlign === "left" ? 4 : -4), top + 10); g.restore(); } }],
+      data: { labels: scen.map(x => x.id + " · " + x.p + "%"), datasets: [{ data: scen.map(x => r2(x.proj)), backgroundColor: scen.map(x => x.diff >= 0 ? tok("--accent") : tok("--accent-2")), borderRadius: 6, barThickness: 22 }] }
+    });
+  }
+  if (ui.view === "stats") {
+    drawBalance("ch-balance", c);
+    const { keys, g, labels } = grouped(c);
+    const pick = f => keys.map(k => r2(f(g[k])));
+    const stacked = () => { const o = baseOpts(); o.scales.x.stacked = true; o.scales.y.stacked = true; o.plugins.legend = { display: true, position: "bottom", labels: { color: tok("--muted"), boxWidth: 10, font: { family: "Plus Jakarta Sans", size: 11 } } }; return o; };
+    const withLegend = () => { const o = baseOpts(); o.plugins.legend = { display: true, position: "bottom", labels: { color: tok("--muted"), boxWidth: 10, font: { family: "Plus Jakarta Sans", size: 11 } } }; return o; };
+    const mk = (id, cfg) => { const el = document.getElementById(id); if (el) charts[id] = new Chart(el, cfg); };
+    mk("ch-income", { type: "bar", options: stacked(), data: { labels, datasets: [
+      { label: "Take-home", data: pick(x => x.net), backgroundColor: tok("--accent"), borderRadius: 4 },
+      { label: "PAYE + ACC", data: pick(x => x.paye), backgroundColor: tok("--c-tax") },
+      { label: "Student loan", data: pick(x => x.sl), backgroundColor: tok("--c-sl") },
+      { label: "KiwiSaver", data: pick(x => x.ks), backgroundColor: tok("--c-ks") },
+      { label: "Other", data: pick(x => x.other), backgroundColor: tok("--c-other") }] } });
+    mk("ch-gross", { type: "bar", options: withLegend(), data: { labels, datasets: [
+      { label: "Gross", data: pick(x => x.gross), backgroundColor: tok("--c-tax"), borderRadius: 4 },
+      { label: "Take-home", data: pick(x => x.net), backgroundColor: tok("--accent"), borderRadius: 4 }] } });
+    mk("ch-flow", { type: "bar", options: withLegend(), data: { labels, datasets: [
+      { label: "Deposits", data: pick(x => x.dep), backgroundColor: tok("--accent"), borderRadius: 4 },
+      { label: "Withdrawals", data: pick(x => x.wd), backgroundColor: tok("--bad"), borderRadius: 4 }] } });
+    const ro = baseOpts(); ro.scales.y.max = 100; ro.scales.y.ticks.callback = v => v + "%"; ro.plugins.tooltip.callbacks.label = ctx => ctx.parsed.y.toFixed(1) + "% saved";
+    mk("ch-rate", { type: keys.length > 1 ? "line" : "bar", options: ro, data: { labels, datasets: [{ data: keys.map(k => g[k].net > 0 ? r2(g[k].saved / g[k].net * 100) : 0), borderColor: tok("--accent"), backgroundColor: tok("--accent-soft"), fill: true, tension: .3, pointRadius: 3, pointBackgroundColor: tok("--accent"), borderRadius: 6 }] } });
+  }
+}
+
+/* ---------------- modal & toast ---------------- */
+let modalSubmit = null, lastFocus = null;
+function openModal(title, body, { submit = "Save", onSubmit = null, danger = false, extraButtons = "", cancel = "Cancel" } = {}) {
+  lastFocus = document.activeElement;
+  const sheet = document.getElementById("sheet");
+  sheet.innerHTML = `<div class="sheet-h"><h2 id="modalTitle">${title}</h2><button class="iconbtn" data-act="close" aria-label="Close">${I.x}</button></div>
+  <form id="mform" class="form" novalidate>${body}<div class="form-err note bad" hidden></div>
+  <div class="sheet-f">${cancel ? `<button type="button" class="btn" data-act="close">${cancel}</button>` : ""}${extraButtons}${onSubmit ? `<button type="submit" class="btn ${danger ? "danger solid" : "primary"}" id="msubmit">${submit}</button>` : ""}</div></form>`;
+  modalSubmit = onSubmit;
+  document.getElementById("modal").hidden = false;
+  document.body.style.overflow = "hidden";
+  setTimeout(() => { const f = sheet.querySelector("input:not([type=hidden]):not([type=checkbox]):not([type=radio]),select,textarea"); (f || sheet.querySelector("button")).focus({ preventScroll: true }); }, 30);
+}
+function closeModal() { document.getElementById("modal").hidden = true; document.body.style.overflow = ""; modalSubmit = null; if (lastFocus && lastFocus.focus) try { lastFocus.focus({ preventScroll: true }); } catch (e) { } }
+function formErr(msg) { const el = document.querySelector("#mform .form-err"); if (!el) return; el.hidden = !msg; el.innerHTML = msg ? `<b>Check this</b><span>${msg}</span>` : ""; }
+function fieldErr(id, msg) { const f = document.querySelector(`.field[data-for="${id}"]`); if (!f) return; f.classList.toggle("err", !!msg); const m = f.querySelector(".errmsg"); m.hidden = !msg; m.textContent = msg || ""; }
+function clearErrs() { document.querySelectorAll("#mform .field.err").forEach(f => { f.classList.remove("err"); f.querySelector(".errmsg").hidden = true; }); formErr(""); }
+let toastTimer;
+function toast(msg) { let t = document.querySelector(".toast"); if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); } t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 2600); }
+const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
+const numv = id => { const v = val(id); return v === "" ? null : Number(v); };
+function reqMoney(id, label, { allowZero = true, required = true } = {}) {
+  const v = numv(id);
+  if (v == null) { if (required) { fieldErr(id, label + " is required"); return NaN; } return 0; }
+  if (!isFinite(v)) { fieldErr(id, "Enter a number"); return NaN; }
+  if (v < 0) { fieldErr(id, "Can't be negative"); return NaN; }
+  if (!allowZero && v === 0) { fieldErr(id, "Must be more than $0"); return NaN; }
+  return r2(v);
+}
+function reqDate(id, label) { const v = val(id); if (!isDate(v)) { fieldErr(id, label + " is required"); return null; } if (v < "2000-01-01" || v > "2100-12-31") { fieldErr(id, "Enter a realistic date"); return null; } return v; }
+
+/* ---- Paycheck form ---- */
+function payForm(existing, prefillDate) {
+  const s = state.settings, c = compute();
+  let p = existing;
+  if (!p) {
+    const sp = (prefillDate && c.sched.find(x => x.date === prefillDate)) || c.future.find(x => x.date >= c.today) || c.future[0];
+    p = { payDate: sp ? sp.date : c.today, periodStart: sp ? sp.periodStart : addDays(c.today, -6), periodEnd: sp ? sp.periodEnd : c.today, hours: sp ? r2(sp.hours) : s.weeklyHours, rate: s.hourlyRate, gross: "", paye: "", sl: "", ks: "", other: "", net: "", deductionsSource: "payslip", allocMode: s.defaultSavePct >= 100 ? "all" : "pct", allocValue: s.defaultSavePct, notes: "", _est: sp };
+  }
+  const isEdit = !!existing;
+  const dep = isEdit && p.depositId ? state.txns.find(t => t.id === p.depositId) : null;
+  const est = p._est;
+  const body = `
+  ${!isEdit ? `<div class="note info"><b>Use your payslip</b><span>Enter what actually arrived in your bank account. ${est ? `Our estimate for this pay is ${money(est.net)} take-home, but it only counts once you enter the real amount.` : ""}</span></div>` : ""}
+  <div class="fgrid">
+    ${fld("pc-payDate", "Pay date", "date", p.payDate, { required: 1 })}
+    ${fld("pc-hours", "Hours worked", "number", p.hours, { min: 0, step: "0.01" })}
+    ${fld("pc-ps", "Pay period start", "date", p.periodStart)}
+    ${fld("pc-pe", "Pay period end", "date", p.periodEnd)}
+    ${fld("pc-rate", "Hourly rate", "number", p.rate, { money: 1, min: 0, step: "0.01" })}
+    ${fld("pc-gross", "Gross pay", "number", p.gross === "" ? r2(p.hours * p.rate) : p.gross, { money: 1, min: 0, step: "0.01", hint: "Calculated from hours × rate. Edit to match your payslip." })}
+  </div>
+  <div class="card-h"><h3>Deductions</h3><button type="button" class="btn sm" data-act="pc-estimate">Fill estimates</button></div>
+  <div class="fgrid">
+    ${fld("pc-paye", "Income tax (PAYE) + ACC", "number", p.paye, { money: 1, min: 0, step: "0.01" })}
+    ${fld("pc-sl", "Student loan", "number", p.sl, { money: 1, min: 0, step: "0.01" })}
+    ${fld("pc-ks", "KiwiSaver", "number", p.ks, { money: 1, min: 0, step: "0.01" })}
+    ${fld("pc-other", "Other deductions", "number", p.other, { money: 1, min: 0, step: "0.01" })}
+    ${fld("pc-dsrc", "These deductions are", "select", p.deductionsSource, { options: [["payslip", "From my payslip"], ["estimate", "Estimates"]], full: 1 })}
+  </div>
+  ${fld("pc-net", "Actual net pay received", "number", p.net, { money: 1, min: 0, step: "0.01", required: 1, hint: "The amount that landed in your account" })}
+  <div class="field"><span class="lab">How much goes to savings?</span>
+    <div class="radio-grid">${[["all", "100% to savings"], ["fixed", "A fixed amount"], ["pct", "A percentage"], ["split", "Custom split"]].map(([k, l]) => `<label><input type="radio" name="alloc" value="${k}" ${p.allocMode === k ? "checked" : ""}> ${l}</label>`).join("")}</div>
+  </div>
+  <div class="fgrid" id="alloc-fields">
+    <div data-alloc="fixed" class="full">${fld("pc-fixed", "Amount to savings", "number", p.allocMode === "fixed" ? p.savedPlanned : "", { money: 1, min: 0, step: "0.01" })}</div>
+    <div data-alloc="pct" class="full">${fld("pc-pct", "Percent to savings", "number", p.allocMode === "pct" ? p.allocValue : s.defaultSavePct, { min: 0, max: 100, step: "1" })}</div>
+    <div data-alloc="split">${fld("pc-splitSave", "To savings", "number", p.allocMode === "split" ? p.savedPlanned : "", { money: 1, min: 0, step: "0.01" })}</div>
+    <div data-alloc="split">${fld("pc-splitSpend", "To spending", "number", p.allocMode === "split" ? p.spending : "", { money: 1, min: 0, step: "0.01" })}</div>
+  </div>
+  <div class="summary-box" id="pc-summary"></div>
+  ${dep ? `<p class="small muted">Linked savings deposit: ${money(dep.amount)} on ${fmtDate(dep.date)}. Changing the savings amount updates it.</p>` :
+      `<label class="check"><input type="checkbox" id="pc-transferred"> I've already moved the savings amount into my savings account</label>
+       <div id="pc-tdate-wrap" hidden>${fld("pc-tdate", "Transfer date", "date", p.payDate)}</div>`}
+  ${fld("pc-notes", "Notes", "textarea", p.notes || "", { full: 1 })}`;
+  openModal(isEdit ? "Edit paycheck" : "Add Paycheck", body, { submit: isEdit ? "Save changes" : "Add Paycheck", onSubmit: () => savePay(existing) });
+  const f = document.getElementById("mform");
+  f.dataset.grossTouched = isEdit || (p.gross !== "" && p.gross != null) ? "1" : "";
+  f.dataset.hoursTouched = isEdit ? "1" : "";
+  updatePayForm();
+}
+function payAlloc() {
+  const net = numv("pc-net") || 0;
+  const mode = (document.querySelector('input[name="alloc"]:checked') || {}).value || "all";
+  let saved = 0, spend = 0, err = "";
+  if (mode === "all") { saved = net; }
+  else if (mode === "fixed") { saved = numv("pc-fixed") || 0; if (saved > net + 0.005) err = "The savings amount is more than your net pay."; spend = net - saved; }
+  else if (mode === "pct") { const p = numv("pc-pct") ?? 0; if (p < 0 || p > 100) err = "Percent must be between 0 and 100."; saved = net * Math.min(100, Math.max(0, p)) / 100; }
+  else { saved = numv("pc-splitSave") || 0; spend = numv("pc-splitSpend") || 0; if (net && Math.abs(saved + spend - net) > 0.01) err = `Savings + spending (${money(saved + spend)}) must equal your net pay (${money(net)}).`; }
+  saved = r2(Math.max(0, saved)); if (mode !== "split") spend = r2(Math.max(0, net - saved));
+  if (saved < 0 || spend < -0.005) err = err || "Amounts can't be negative.";
+  return { mode, saved, spend: r2(spend), err, value: mode === "pct" ? numv("pc-pct") : mode === "fixed" ? numv("pc-fixed") : null };
+}
+function updatePayForm(src) {
+  const f = document.getElementById("mform"); if (!f || !document.getElementById("pc-net")) return;
+  const s = state.settings;
+  if (src === "pc-gross") f.dataset.grossTouched = "1";
+  if (src === "pc-hours") f.dataset.hoursTouched = "1";
+  if ((src === "pc-ps" || src === "pc-pe") && !f.dataset.hoursTouched && isDate(val("pc-ps")) && isDate(val("pc-pe"))) {
+    document.getElementById("pc-hours").value = r2(workDaysIn(s, val("pc-ps"), val("pc-pe")) * hoursPerDay(s));
+  }
+  if (!f.dataset.grossTouched) { const h = numv("pc-hours") || 0, r = numv("pc-rate") || 0; document.getElementById("pc-gross").value = r2(h * r).toFixed(2); }
+  const mode = (document.querySelector('input[name="alloc"]:checked') || {}).value;
+  document.querySelectorAll("[data-alloc]").forEach(el => el.hidden = el.dataset.alloc !== mode);
+  const a = payAlloc();
+  const gross = numv("pc-gross") || 0, ded = (numv("pc-paye") || 0) + (numv("pc-sl") || 0) + (numv("pc-ks") || 0) + (numv("pc-other") || 0);
+  const net = numv("pc-net");
+  const box = document.getElementById("pc-summary");
+  box.innerHTML = `<div class="kv"><span class="muted">Gross − deductions</span><span>${money(gross - ded)}</span></div>
+    <div class="kv"><span class="muted">Net received</span><span>${net != null ? money(net) : "not entered"}</span></div>
+    <div class="kv"><span><b>To savings</b></span><span style="color:var(--accent)"><b>${money(a.saved)}</b></span></div>
+    <div class="kv"><span class="muted">To spending</span><span>${money(a.spend)}</span></div>
+    ${net != null && ded > 0 && Math.abs(gross - ded - net) > 1 ? `<span class="xs muted">Your deductions don't add up to the net amount. Double-check your payslip. The app always uses the net you received.</span>` : ""}
+    ${a.err ? `<span class="xs" style="color:var(--bad);font-weight:600">${a.err}</span>` : ""}`;
+  const tw = document.getElementById("pc-tdate-wrap"), tc = document.getElementById("pc-transferred");
+  if (tw && tc) tw.hidden = !tc.checked;
+}
+function fillPayEstimates() {
+  const s = state.settings;
+  const gross = numv("pc-gross") || 0;
+  const ps = val("pc-ps"), pe = val("pc-pe");
+  const days = isDate(ps) && isDate(pe) && pe >= ps ? daysBetween(ps, pe) + 1 : +s.payFrequency || 7;
+  const d = calcDeductions(s, gross, [7, 14, 28].includes(days) ? days : (+s.payFrequency || 7));
+  const set = (id, v) => document.getElementById(id).value = r2(v).toFixed(2);
+  set("pc-paye", d.paye + d.acc); set("pc-sl", d.sl); set("pc-ks", gross * s.kiwiSaverRate / 100); set("pc-other", s.otherWeekly * days / 7);
+  document.getElementById("pc-dsrc").value = "estimate";
+  updatePayForm();
+  toast("Estimated deductions filled in. Replace them with your payslip figures.");
+}
+function savePay(existing) {
+  clearErrs();
+  const payDate = reqDate("pc-payDate", "Pay date");
+  const ps = val("pc-ps"), pe = val("pc-pe");
+  let ok = !!payDate;
+  if (ps && !isDate(ps)) { fieldErr("pc-ps", "Invalid date"); ok = false; }
+  if (pe && !isDate(pe)) { fieldErr("pc-pe", "Invalid date"); ok = false; }
+  if (isDate(ps) && isDate(pe) && pe < ps) { fieldErr("pc-pe", "Ends before it starts"); ok = false; }
+  const hours = numv("pc-hours"); if (hours == null || hours < 0 || !isFinite(hours) || hours > 400) { fieldErr("pc-hours", "Enter hours from 0 to 400"); ok = false; }
+  const rate = reqMoney("pc-rate", "Hourly rate"), gross = reqMoney("pc-gross", "Gross pay");
+  const paye = reqMoney("pc-paye", "", { required: false }), sl = reqMoney("pc-sl", "", { required: false }), ks = reqMoney("pc-ks", "", { required: false }), other = reqMoney("pc-other", "", { required: false });
+  const net = reqMoney("pc-net", "Net pay", { allowZero: false });
+  if ([rate, gross, paye, sl, ks, other, net].some(x => Number.isNaN(x))) ok = false;
+  if (ok && net > gross + 0.005 && gross > 0) { fieldErr("pc-net", "Net pay can't be more than gross pay"); ok = false; }
+  const a = payAlloc(); if (a.err) { formErr(a.err); ok = false; }
+  if (!ok) return;
+  const transferred = document.getElementById("pc-transferred")?.checked;
+  const tdate = transferred ? reqDate("pc-tdate", "Transfer date") : null;
+  if (transferred && !tdate) return;
+  const dup = state.paychecks.find(p => p.payDate === payDate && (!existing || p.id !== existing.id));
+  const f = document.getElementById("mform");
+  if (dup && f.dataset.dupOk !== payDate) {
+    f.dataset.dupOk = payDate;
+    formErr(`You already recorded a ${money(dup.net)} pay on ${fmtDate(payDate)}. If this is a separate payment (like a bonus), press the button again to save it anyway.`);
+    document.getElementById("msubmit").textContent = "Save anyway";
+    return;
+  }
+  const rec = existing || { id: uid(), created: Date.now() };
+  Object.assign(rec, { payDate, periodStart: isDate(ps) ? ps : "", periodEnd: isDate(pe) ? pe : "", hours: r2(hours), rate, gross, paye, sl, ks, other, net, deductionsSource: val("pc-dsrc"), allocMode: a.mode, allocValue: a.value, savedPlanned: a.saved, spending: a.spend, notes: val("pc-notes") });
+  delete rec._est;
+  if (!existing) state.paychecks.push(rec);
+  const dep = rec.depositId ? state.txns.find(t => t.id === rec.depositId) : null;
+  if (dep) {
+    if (rec.savedPlanned > 0) dep.amount = rec.savedPlanned; else { state.txns = state.txns.filter(t => t.id !== dep.id); rec.depositId = null; }
+  } else if (rec.depositId) rec.depositId = null;
+  if (transferred && !rec.depositId && rec.savedPlanned > 0) {
+    const t = { id: uid(), created: Date.now(), date: tdate, type: "deposit", amount: rec.savedPlanned, description: "Savings from pay on " + fmtDate(payDate), paycheckId: rec.id, notes: "" };
+    state.txns.push(t); rec.depositId = t.id;
+  }
+  persist(); closeModal(); renderAll();
+  toast(existing ? "Paycheck updated" : rec.depositId ? `Paycheck added · ${money(rec.savedPlanned)} saved` : "Paycheck added");
+}
+
+/* ---- Transaction form ---- */
+function txnForm(existing, preset = {}) {
+  const t = existing || { type: preset.type || "deposit", date: preset.date || todayISO(), amount: preset.amount ?? "", description: preset.description || "", paycheckId: preset.paycheckId || "", notes: "" };
+  const isAdj = t.type === "adjustment";
+  const avail = state.paychecks.filter(p => !p.depositId || !state.txns.some(x => x.id === p.depositId) || p.id === t.paycheckId).sort((a, b) => a.payDate < b.payDate ? 1 : -1);
+  const body = `<div class="fgrid">
+    ${fld("tx-type", "Type", "select", t.type, { options: [["deposit", "Deposit"], ["withdrawal", "Withdrawal"], ["interest", "Interest"], ["adjustment", "Adjustment"]] })}
+    ${fld("tx-date", "Date", "date", t.date, { required: 1 })}
+    ${fld("tx-amount", "Amount", "number", t.amount === "" ? "" : Math.abs(t.amount), { money: 1, min: 0, step: "0.01", required: 1 })}
+    <div data-adj ${isAdj ? "" : "hidden"}>${fld("tx-dir", "Adjustment direction", "select", isAdj && t.amount < 0 ? "down" : "up", { options: [["up", "Increase balance"], ["down", "Decrease balance"]] })}</div>
+    ${fld("tx-desc", "Description", "text", t.description, { full: 1, placeholder: "e.g. Savings from pay" })}
+    <div class="full" data-dep>${fld("tx-pc", "Related paycheck", "select", t.paycheckId || "", { options: [["", "None"], ...avail.map(p => [p.id, `Pay on ${fmtDate(p.payDate)} · ${money(p.net)} net · ${money(p.savedPlanned)} planned`])], hint: "Linking stops the same pay being counted twice" })}</div>
+    ${fld("tx-notes", "Notes", "textarea", t.notes || "", { full: 1 })}
+  </div><div class="summary-box" id="tx-preview" hidden></div>`;
+  openModal(existing ? "Edit transaction" : (t.type === "withdrawal" ? "Withdraw from savings" : "Add Savings"), body, { submit: existing ? "Save changes" : "Add", onSubmit: () => saveTxn(existing) });
+  updateTxForm();
+}
+function updateTxForm() {
+  const type = val("tx-type"); if (!type) return;
+  document.querySelectorAll("[data-adj]").forEach(e => e.hidden = type !== "adjustment");
+  document.querySelectorAll("[data-dep]").forEach(e => e.hidden = type !== "deposit");
+  const box = document.getElementById("tx-preview");
+  const amt = numv("tx-amount");
+  const isDown = type === "withdrawal" || (type === "adjustment" && val("tx-dir") === "down");
+  if (!amt || !isDown) { box.hidden = true; return; }
+  const c = compute();
+  const after = c.balance - amt;
+  const before = c.projectDate(c.s.goal), afterD = c.projectDate(c.s.goal, c.savingsRate, after + c.pending);
+  box.hidden = false;
+  box.innerHTML = `<div class="label">Effect of taking out ${money(amt)}</div>
+    <div class="kv"><span class="muted">Balance</span><span>${money(c.balance)} → ${money(after)}</span></div>
+    <div class="kv"><span class="muted">Progress</span><span>${pct(c.progress)} → ${pct(Math.max(0, after / c.s.goal))}</span></div>
+    <div class="kv"><span class="muted">Projected ${fmtDate(c.s.deadline)}</span><span>${money(c.projected)} → ${money(c.projected - amt)}</span></div>
+    <div class="kv"><span class="muted">Goal reached</span><span>${before ? fmtDate(before.date, { year: "numeric" }) : "not projected"} → ${afterD ? fmtDate(afterD.date, { year: "numeric" }) : "not projected"}</span></div>
+    ${after < 0 ? `<span class="xs" style="color:var(--bad);font-weight:600">That's more than your savings balance.</span>` : ""}`;
+}
+function saveTxn(existing) {
+  clearErrs();
+  const type = val("tx-type"), date = reqDate("tx-date", "Date");
+  const amt = reqMoney("tx-amount", "Amount", { allowZero: false });
+  if (!date || Number.isNaN(amt)) return;
+  const c = compute();
+  if ((type === "withdrawal" || (type === "adjustment" && val("tx-dir") === "down"))) {
+    const curr = existing ? c.balance - signedAmt(existing) : c.balance;
+    if (amt > curr + 0.005) { fieldErr("tx-amount", `You only have ${money(curr)} in savings`); return; }
+  }
+  const pcId = type === "deposit" ? val("tx-pc") : "";
+  if (pcId) {
+    const clash = state.txns.find(t => t.paycheckId === pcId && (!existing || t.id !== existing.id));
+    if (clash) { fieldErr("tx-pc", `That pay already has a ${money(clash.amount)} deposit on ${fmtDate(clash.date)}. Edit that one instead.`); return; }
+  }
+  const amount = type === "adjustment" && val("tx-dir") === "down" ? -amt : amt;
+  const f = document.getElementById("mform");
+  const dup = state.txns.find(t => t.date === date && t.type === type && Math.abs(t.amount - amount) < 0.005 && (!existing || t.id !== existing.id));
+  if (dup && f.dataset.dupOk !== "1") { f.dataset.dupOk = "1"; formErr(`There's already a ${money(amt)} ${type} on ${fmtDate(date)}. Press the button again only if this is a separate one.`); document.getElementById("msubmit").textContent = "Save anyway"; return; }
+  const rec = existing || { id: uid(), created: Date.now() };
+  const oldPc = rec.paycheckId;
+  Object.assign(rec, { type, date, amount, description: val("tx-desc"), paycheckId: pcId || "", notes: val("tx-notes") });
+  if (!existing) state.txns.push(rec);
+  if (oldPc && oldPc !== pcId) { const p = state.paychecks.find(p => p.id === oldPc); if (p && p.depositId === rec.id) p.depositId = null; }
+  if (pcId) { const p = state.paychecks.find(p => p.id === pcId); if (p) p.depositId = rec.id; }
+  persist(); closeModal(); renderAll();
+  toast(existing ? "Transaction updated" : type === "withdrawal" ? "Withdrawal recorded" : "Savings added");
+}
+function transferFor(pcId) {
+  const p = state.paychecks.find(x => x.id === pcId); if (!p) return;
+  txnForm(null, { type: "deposit", date: todayISO() < p.payDate ? p.payDate : todayISO(), amount: p.savedPlanned, description: "Savings from pay on " + fmtDate(p.payDate), paycheckId: p.id });
+}
+
+/* ---- Expense form ---- */
+function expForm(existing) {
+  const e = existing || { date: todayISO(), category: "Food", amount: "", description: "", notes: "" };
+  const cats = allCats(); if (!cats.includes(e.category)) cats.push(e.category);
+  openModal(existing ? "Edit expense" : "Add Expense", `<div class="fgrid">
+    ${fld("ex-date", "Date", "date", e.date, { required: 1 })}
+    ${fld("ex-amount", "Amount", "number", e.amount, { money: 1, min: 0, step: "0.01", required: 1 })}
+    ${fld("ex-cat", "Category", "select", e.category, { options: cats.map(k => [k, k]), full: 1 })}
+    ${fld("ex-desc", "Description", "text", e.description, { full: 1 })}
+    ${fld("ex-notes", "Notes", "textarea", e.notes || "", { full: 1 })}
+  </div><p class="xs muted">Add your own categories in Settings.</p>`, { submit: existing ? "Save changes" : "Add Expense", onSubmit: () => {
+    clearErrs();
+    const date = reqDate("ex-date", "Date"), amount = reqMoney("ex-amount", "Amount", { allowZero: false });
+    if (!date || Number.isNaN(amount)) return;
+    const rec = existing || { id: uid(), created: Date.now() };
+    Object.assign(rec, { date, amount, category: val("ex-cat"), description: val("ex-desc"), notes: val("ex-notes") });
+    if (!existing) state.expenses.push(rec);
+    persist(); closeModal(); ui.view = "txn"; ui.txTab = "spending"; renderAll(); toast(existing ? "Expense updated" : "Expense added");
+  } });
+}
+
+/* ---- confirmations ---- */
+function confirmBox(title, msg, label, onYes, extra = "") {
+  openModal(title, `<p>${msg}</p>`, { submit: label, danger: true, onSubmit: onYes, extraButtons: extra });
+}
+function delPay(id) {
+  const p = state.paychecks.find(x => x.id === id); if (!p) return;
+  const dep = p.depositId ? state.txns.find(t => t.id === p.depositId) : null;
+  const doDel = keepDep => { state.paychecks = state.paychecks.filter(x => x.id !== id); if (dep) { if (keepDep) dep.paycheckId = ""; else state.txns = state.txns.filter(t => t.id !== dep.id); } persist(); closeModal(); renderAll(); toast("Paycheck deleted"); };
+  confirmBox("Delete this paycheck?", `Pay of ${money(p.net)} on ${fmtLong(p.payDate)} will be removed.${dep ? ` It has a linked savings deposit of ${money(dep.amount)}.` : ""} This can't be undone.`, dep ? "Delete pay and deposit" : "Delete paycheck", () => doDel(false), dep ? `<button type="button" class="btn danger" data-act="del-pay-keep" data-id="${id}">Keep the deposit</button>` : "");
+  window._keepDep = () => doDel(true);
+}
+function delTxn(id) {
+  const t = state.txns.find(x => x.id === id); if (!t) return;
+  confirmBox("Delete this transaction?", `${TX_META[t.type][2]} of ${money(Math.abs(t.amount))} on ${fmtLong(t.date)} will be removed and your balance recalculated.${t.paycheckId ? " The linked pay will show its transfer as pending again." : ""}`, "Delete", () => {
+    state.txns = state.txns.filter(x => x.id !== id);
+    state.paychecks.forEach(p => { if (p.depositId === id) p.depositId = null; });
+    persist(); closeModal(); renderAll(); toast("Transaction deleted");
+  });
+}
+function delExp(id) {
+  const e = state.expenses.find(x => x.id === id); if (!e) return;
+  confirmBox("Delete this expense?", `${esc(e.category)} expense of ${money(e.amount)} on ${fmtLong(e.date)} will be removed.`, "Delete", () => { state.expenses = state.expenses.filter(x => x.id !== id); persist(); closeModal(); renderAll(); toast("Expense deleted"); });
+}
+
+/* ---- goal & limits quick editors ---- */
+function goalForm() {
+  const s = state.settings;
+  openModal("Update goal", `<div class="fgrid">${fld("g-goal", "Savings target", "number", s.goal, { money: 1, min: 1, step: "0.01" })}${fld("g-deadline", "Deadline", "date", s.deadline)}${fld("g-start", "Starting balance", "number", s.startBalance, { money: 1, min: 0, step: "0.01", full: 1 })}</div>`, { submit: "Save goal", onSubmit: () => {
+    clearErrs();
+    const goal = reqMoney("g-goal", "Target", { allowZero: false }), deadline = reqDate("g-deadline", "Deadline"), sb = reqMoney("g-start", "Starting balance");
+    if (Number.isNaN(goal) || !deadline || Number.isNaN(sb)) return;
+    if (deadline <= s.startDate) { fieldErr("g-deadline", "Deadline must be after your start date"); return; }
+    Object.assign(s, { goal, deadline, startBalance: sb }); ui.calc = null; persist(); closeModal(); renderAll(); toast("Goal updated");
+  } });
+}
+function limitsForm() {
+  const s = state.settings;
+  openModal("Spending limits", `<div class="fgrid">${fld("l-w", "Weekly limit", "number", s.weeklyLimit, { money: 1, min: 0, step: "0.01", hint: "0 = none" })}${fld("l-m", "Monthly limit", "number", s.monthlyLimit, { money: 1, min: 0, step: "0.01", hint: "0 = none" })}</div>`, { submit: "Save limits", onSubmit: () => {
+    clearErrs(); const w = reqMoney("l-w", "Weekly limit", { required: false }), m = reqMoney("l-m", "Monthly limit", { required: false });
+    if (Number.isNaN(w) || Number.isNaN(m)) return; s.weeklyLimit = w; s.monthlyLimit = m; persist(); closeModal(); renderAll(); toast("Limits saved");
+  } });
+}
+
+/* ---- export / import ---- */
+function csvEsc(v) { const s = String(v ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function toCSV(kind) {
+  if (kind === "txns") return ["Date,Type,Amount,Description,Related pay date,Notes", ...[...state.txns].sort(byDate).map(t => { const p = state.paychecks.find(x => x.id === t.paycheckId); return [t.date, t.type, r2(signedAmt(t)).toFixed(2), t.description, p ? p.payDate : "", t.notes].map(csvEsc).join(","); })].join("\n");
+  if (kind === "paychecks") return ["Pay date,Period start,Period end,Hours,Rate,Gross,PAYE+ACC,Student loan,KiwiSaver,Other,Net received,To savings,To spending,Transferred,Deductions source,Notes", ...[...state.paychecks].sort((a, b) => a.payDate < b.payDate ? -1 : 1).map(p => [p.payDate, p.periodStart, p.periodEnd, p.hours, p.rate, p.gross, p.paye, p.sl, p.ks, p.other, p.net, p.savedPlanned, p.spending, p.depositId ? "yes" : "no", p.deductionsSource, p.notes].map(csvEsc).join(","))].join("\n");
+  return ["Date,Category,Amount,Description,Notes", ...[...state.expenses].sort(byDate).map(e => [e.date, e.category, r2(e.amount).toFixed(2), e.description, e.notes].map(csvEsc).join(","))].join("\n");
+}
+async function offerFile(filename, data) {
+  if (!window.claude) {
+    try {
+      const type = filename.endsWith(".json") ? "application/json" : "text/csv";
+      const file = new File([data], filename, { type });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: filename }); toast("Shared " + filename); return; }
+      const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Saved " + filename); return;
+    } catch (e) { if (e && e.name === "AbortError") { toast("Export cancelled"); return; } }
+  }
+  let dl = null; try { dl = window.claude && claude.use ? await claude.use("downloads") : null; } catch (e) { }
+  if (dl) {
+    try { await dl.save({ filename, data }); toast("Saved " + filename); return; }
+    catch (e) { if (e && e.code === "declined") { toast("Download cancelled"); return; } if (e && e.code === "rate_limited") { toast("A save prompt is already open"); return; } }
+  }
+  openModal("Copy your export", `<p class="small muted">Downloads aren't available here, so copy this text and save it as <b>${esc(filename)}</b>.</p><div class="field"><textarea id="exporttext" style="min-height:220px;font-family:ui-monospace,monospace;font-size:12px" readonly>${esc(data)}</textarea></div>`, { submit: "Copy", cancel: "Close", onSubmit: async () => {
+    const ta = document.getElementById("exporttext");
+    try { await navigator.clipboard.writeText(ta.value); toast("Copied"); } catch (e) { ta.focus(); ta.select(); toast("Selected. Press copy on your keyboard."); }
+  } });
+}
+function exportJSON() { offerFile("savings-backup-" + todayISO() + ".json", JSON.stringify({ app: "savings-tracker-10k", exportedAt: new Date().toISOString(), ...state }, null, 2)); }
+function exportMenu() {
+  openModal("Export data", `<p class="small muted">Back up everything as JSON (you can import it later), or export CSV files for a spreadsheet.</p><div class="actions"><button type="button" class="btn primary" data-act="json">JSON backup</button><button type="button" class="btn" data-act="csv" data-kind="txns">Savings CSV</button><button type="button" class="btn" data-act="csv" data-kind="paychecks">Paychecks CSV</button><button type="button" class="btn" data-act="csv" data-kind="expenses">Expenses CSV</button></div>`, { cancel: "Close" });
+}
+function handleImport(file) {
+  const r = new FileReader();
+  r.onload = () => {
+    let o; try { o = JSON.parse(r.result); } catch (e) { return openModal("Can't import that file", `<p>It isn't valid JSON. Choose a backup exported from this app.</p>`, { cancel: "Close" }); }
+    const n = normalize(o);
+    if (!n || !o.settings || !Array.isArray(o.paychecks) || !Array.isArray(o.txns)) return openModal("Can't import that file", `<p>It doesn't look like a backup from this app.</p>`, { cancel: "Close" });
+    const bad = n.paychecks.some(p => !isDate(p.payDate) || !isFinite(p.net)) || n.txns.some(t => !isDate(t.date) || !isFinite(t.amount) || !TX_META[t.type]);
+    if (bad) return openModal("Can't import that file", `<p>Some entries have missing dates or invalid amounts.</p>`, { cancel: "Close" });
+    confirmBox("Replace your data?", `This backup${o.exportedAt ? " from " + esc(new Date(o.exportedAt).toLocaleString("en-NZ")) : ""} has ${n.paychecks.length} paychecks, ${n.txns.length} savings transactions and ${n.expenses.length} expenses. It will replace everything currently in the app.`, "Replace with backup", () => {
+      n.celebrated = milestoneList(compute(n)).filter(m => m.reached).map(m => m.amount);
+      state = n; ui.calc = null; persist(); closeModal(); renderAll(); toast("Backup imported");
+    });
+  };
+  r.readAsText(file);
+}
+
+/* ---- sample data ---- */
+function loadSample() {
+  const s = state.settings;
+  const mk = (payDate, ps, pe, hours, net, paye, sl, saveFrac, transferred) => {
+    const gross = r2(hours * s.hourlyRate), saved = r2(net * saveFrac);
+    const p = { id: uid(), created: Date.now(), sample: true, payDate, periodStart: ps, periodEnd: pe, hours, rate: s.hourlyRate, gross, paye, sl, ks: 0, other: 0, net, deductionsSource: "payslip", allocMode: saveFrac === 1 ? "all" : "pct", allocValue: saveFrac * 100, savedPlanned: saved, spending: r2(net - saved), notes: "Example entry", depositId: null };
+    state.paychecks.push(p);
+    if (transferred) { const t = { id: uid(), created: Date.now(), sample: true, date: payDate, type: "deposit", amount: saved, description: "Savings from pay on " + fmtDate(payDate), paycheckId: p.id, notes: "" }; state.txns.push(t); p.depositId = t.id; }
+  };
+  mk("2026-10-28", "2026-10-18", "2026-10-24", 37.6, 690.12, 172.30, 60.66, 1, true);
+  mk("2026-11-04", "2026-10-25", "2026-10-31", 47, 856.10, 214.99, 82.76, 0.9, true);
+  mk("2026-11-11", "2026-11-01", "2026-11-07", 47, 855.60, 215.49, 82.76, 1, false);
+  state.txns.push({ id: uid(), created: Date.now(), sample: true, date: "2026-11-01", type: "interest", amount: 0.84, description: "Bonus saver interest", paycheckId: "", notes: "" });
+  state.expenses.push({ id: uid(), created: Date.now(), sample: true, date: "2026-11-05", category: "Transport", amount: 42.5, description: "Bus card top-up", notes: "" });
+  state.celebrated = milestoneList(compute()).filter(m => m.reached).map(m => m.amount);
+  persist(); renderAll(); toast("Sample data loaded");
+}
+function clearSample() {
+  const ids = new Set(state.txns.filter(t => t.sample).map(t => t.id));
+  state.paychecks = state.paychecks.filter(p => !p.sample);
+  state.paychecks.forEach(p => { if (ids.has(p.depositId)) p.depositId = null; });
+  state.txns = state.txns.filter(t => !t.sample); state.expenses = state.expenses.filter(e => !e.sample);
+  state.celebrated = milestoneList(compute()).filter(m => m.reached).map(m => m.amount);
+  persist(); renderAll(); toast("Sample data removed");
+}
+
+/* ---- milestones celebration ---- */
+function checkMilestones(c) {
+  const reached = milestoneList(c).filter(m => m.reached).map(m => m.amount);
+  const fresh = reached.filter(m => !state.celebrated.includes(m));
+  if (!fresh.length) return;
+  state.celebrated = [...new Set([...state.celebrated, ...fresh])];
+  persist();
+  if (!document.getElementById("modal").hidden) return;
+  const m = Math.max(...fresh);
+  const msgs = { 1000: "Your first thousand. The habit is working.", 2500: "A quarter of the way there.", 5000: "Halfway. Keep the rhythm going.", 7500: "Three quarters done. The finish line is in sight." };
+  const isGoal = m >= c.s.goal;
+  openModal(isGoal ? "Goal reached" : "Milestone reached", `<div class="celebrate"><div class="medal on">${m >= 1000 ? (m / 1000).toFixed(m % 1000 ? 1 : 0) + "K" : money0(m)}</div><h3 style="font-size:1.4rem">${money(m)} saved</h3><p class="muted">${isGoal ? `You did it: ${money(c.balance)} in savings.` : msgs[m] || "Nice progress."}</p></div>`, { cancel: "Close" });
+  confetti();
+}
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv = document.getElementById("confetti"), g = cv.getContext("2d");
+  cv.hidden = false; cv.width = innerWidth; cv.height = innerHeight;
+  const cols = [tok("--accent"), tok("--gold"), tok("--accent-2"), tok("--c-sl")];
+  const ps = Array.from({ length: 90 }, () => ({ x: innerWidth / 2 + (Math.random() - .5) * 120, y: innerHeight * .35, vx: (Math.random() - .5) * 9, vy: -Math.random() * 9 - 3, r: Math.random() * 6 + 3, c: cols[Math.floor(Math.random() * cols.length)], a: Math.random() * 6 }));
+  let f = 0;
+  (function step() {
+    g.clearRect(0, 0, cv.width, cv.height);
+    for (const p of ps) { p.vy += .25; p.x += p.vx; p.y += p.vy; p.a += .1; g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.fillStyle = p.c; g.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); g.restore(); }
+    if (++f < 110) requestAnimationFrame(step); else { g.clearRect(0, 0, cv.width, cv.height); cv.hidden = true; }
+  })();
+}
+
+/* ---------------- events ---------------- */
+function go(v) { ui.view = v; try { localStorage.setItem(LS_KEY + ":view", v); } catch (e) { } renderAll(); window.scrollTo({ top: 0 }); }
+document.addEventListener("click", e => {
+  const nav = e.target.closest("[data-nav]"); if (nav) { if (!document.getElementById("modal").hidden) closeModal(); return go(nav.dataset.nav); }
+  const st = e.target.closest("[data-savetab]"); if (st) { ui.saveTab = st.dataset.savetab; return renderAll(); }
+  const tt = e.target.closest("[data-txtab]"); if (tt) { ui.txTab = tt.dataset.txtab; return renderAll(); }
+  const gp = e.target.closest("[data-group]"); if (gp) { ui.group = gp.dataset.group; return renderAll(); }
+  if (e.target.id === "modal") return closeModal();
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const id = b.dataset.id, act = b.dataset.act;
+  switch (act) {
+    case "close": return closeModal();
+    case "fab": return addSheet();
+    case "add-pay": return payForm(null, b.dataset.date);
+    case "edit-pay": return payForm(state.paychecks.find(p => p.id === id));
+    case "del-pay": return delPay(id);
+    case "del-pay-keep": return window._keepDep && window._keepDep();
+    case "transfer": return transferFor(id);
+    case "pc-estimate": return fillPayEstimates();
+    case "add-txn": return txnForm(null, { type: b.dataset.type });
+    case "edit-txn": return txnForm(state.txns.find(t => t.id === id));
+    case "del-txn": return delTxn(id);
+    case "add-exp": return expForm(null);
+    case "edit-exp": return expForm(state.expenses.find(x => x.id === id));
+    case "del-exp": return delExp(id);
+    case "edit-goal": return goalForm();
+    case "limits": return limitsForm();
+    case "export": return exportMenu();
+    case "json": return exportJSON();
+    case "csv": return offerFile(b.dataset.kind + "-" + todayISO() + ".csv", toCSV(b.dataset.kind));
+    case "import": return document.getElementById("importFile").click();
+    case "clear": return confirmBox("Clear all data?", "This deletes every paycheck, transaction, expense and setting, and restores the defaults. Export a backup first if you might want it back.", "Delete everything", () => { state = defaultState(); state.updatedAt = 1; ui.calc = null; persist(); closeModal(); renderAll(); toast("All data cleared"); });
+    case "load-sample": return loadSample();
+    case "clear-sample": return clearSample();
+    case "goto-pay-settings": ui.view = "set"; renderAll(); return document.getElementById("pay-settings")?.scrollIntoView({ behavior: "smooth" });
+    case "add-cat": { const v = (document.getElementById("newcat").value || "").trim(); if (!v) return; if (allCats().some(k => k.toLowerCase() === v.toLowerCase())) return toast("That category already exists"); state.settings.customCategories.push(v.slice(0, 40)); persist(); renderAll(); return toast("Category added"); }
+    case "rm-cat": state.settings.customCategories.splice(+b.dataset.i, 1); persist(); renderAll(); return;
+    case "calc-reset": ui.calc = null; return renderAll();
+    case "calc-apply": { const k = ui.calc; const s = state.settings; if (!k) return; if (!isDate(k.deadline) || k.deadline <= s.startDate || !(+k.goal > 0) || +k.rate < 0 || +k.hours < 0) return toast("Fix the calculator inputs first"); Object.assign(s, { goal: r2(+k.goal), deadline: k.deadline, hourlyRate: r2(+k.rate), weeklyHours: +k.hours }); persist(); renderAll(); return toast("Settings updated"); }
+  }
+});
+document.addEventListener("submit", e => { if (e.target.id === "mform") { e.preventDefault(); modalSubmit && modalSubmit(); } });
+document.addEventListener("input", e => {
+  const id = e.target.id || "";
+  if (id.startsWith("pc-") || e.target.name === "alloc") updatePayForm(id);
+  if (id.startsWith("tx-")) updateTxForm();
+  if (id.startsWith("calc-")) {
+    const key = id.slice(5); const v = e.target.value;
+    if (!ui.calc) return;
+    if (key === "deadline") { if (!isDate(v) || v <= state.settings.startDate) return; ui.calc.deadline = v; }
+    else { const n = Number(v); if (v === "" || !isFinite(n) || n < 0) return; ui.calc[key] = n; }
+    clearTimeout(window._calcT); window._calcT = setTimeout(() => { const a = document.activeElement?.id; const pos = document.activeElement?.selectionStart; renderAll(); const el = a && document.getElementById(a); if (el) { el.focus({ preventScroll: true }); try { if (pos != null) el.setSelectionRange(pos, pos); } catch (er) { } } }, 350);
+  }
+});
+document.addEventListener("change", e => {
+  const el = e.target, s = state.settings;
+  if (el.id === "pc-transferred") updatePayForm();
+  if (el.id === "importFile" && el.files[0]) { handleImport(el.files[0]); el.value = ""; return; }
+  if (el.dataset.set) {
+    const key = el.dataset.set, f = el.closest(".field"); const showErr = m => { if (!f) return; f.classList.toggle("err", !!m); const em = f.querySelector(".errmsg"); em.hidden = !m; em.textContent = m || ""; };
+    let v = el.value;
+    if (el.type === "number" || ["payFrequency", "kiwiSaverRate"].includes(key)) {
+      v = Number(v);
+      if (el.value === "" || !isFinite(v) || v < 0) return showErr("Enter a number of 0 or more");
+      if (el.max && v > +el.max) return showErr("Must be " + el.max + " or less");
+      if (key === "goal" && v <= 0) return showErr("Goal must be more than $0");
+      v = ["hourlyRate", "goal", "startBalance", "manualWeeklyNet", "otherWeekly", "weeklyLimit", "monthlyLimit", "accCap", "slThreshold"].includes(key) ? r2(v) : v;
+    } else if (el.type === "date") {
+      if (!isDate(v)) return showErr("Enter a valid date");
+      if (key === "deadline" && v <= s.startDate) return showErr("Must be after your start date");
+      if (key === "startDate" && v >= s.deadline) return showErr("Must be before your deadline");
+    }
+    showErr(""); s[key] = v; ui.calc = null; persist(); renderAll(); toast("Saved");
+  }
+  if (el.dataset.setbool) { s[el.dataset.setbool] = el.checked; persist(); renderAll(); toast("Saved"); }
+  if (el.dataset.workday) { const d = +el.dataset.workday; const set = new Set(s.workDays); el.checked ? set.add(d) : set.delete(d); if (!set.size) { el.checked = true; return toast("Keep at least one workday"); } s.workDays = [...set].sort(); persist(); renderAll(); toast("Saved"); }
+  if (el.dataset.bracket) {
+    const [i, k] = el.dataset.bracket.split(":"); const v = el.value === "" ? null : Number(el.value);
+    if (k === "rate" && (v == null || v < 0 || v > 100)) return toast("Rate must be 0–100%");
+    if (k === "upTo" && v != null && (!isFinite(v) || v <= 0)) return toast("Enter a positive income limit, or leave blank for the top bracket");
+    s.brackets[+i][k] = v; persist(); renderAll(); toast("Tax bracket saved");
+  }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !document.getElementById("modal").hidden) closeModal(); });
+const reTheme = () => { if (Object.keys(charts).length) renderAll(); };
+try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", reTheme); } catch (e) { }
+new MutationObserver(reTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+/* ---------------- boot ---------------- */
+(function boot() {
+  const local = loadLocal(); if (local) state = local;
+  const h = (location.hash || "").slice(1); const map = { dashboard: "dash", paychecks: "pay", savings: "save", transactions: "txn", analytics: "stats", settings: "set" };
+  try { ui.view = map[h] || localStorage.getItem(LS_KEY + ":view") || "dash"; } catch (e) { ui.view = map[h] || "dash"; }
+  if (!VIEWS.some(([k]) => k === ui.view)) ui.view = "dash";
+  renderAll(); renderSync();
+  if (!window.Chart) window.addEventListener("load", () => { if (window.Chart) renderAll(); });
+  initRemote();
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { }
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => { });
+})();
+</script>
+</body>
+</html>
